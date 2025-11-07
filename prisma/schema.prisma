@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url  	    = env("DATABASE_URL")
+}
+
+enum SubscriptionType {
+  monthly
+  yearly
+}
+
+model Car {
+  id                 Int       @id @default(autoincrement())
+  plateNumber        String    @unique
+  subscriptionType   SubscriptionType?
+  subscriptionExpiry DateTime?
+  tickets            Ticket[]
+
+  @@map("cars")
+}
+
+model Ticket {
+  id          Int       @id @default(autoincrement())
+  entryTime   DateTime  @default(now())
+  exitTime    DateTime?
+  totalAmount Float?
+  isPaid      Boolean   @default(false)
+  carId       Int
+  car         Car       @relation(fields: [carId], references: [id])
+
+  @@map("tickets")
+}
