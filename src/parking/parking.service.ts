@@ -1,32 +1,73 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ParkingService {
-  private tickets: Ticket[] = [];
-  private freeHours = 2;
-  private pricePerHour = 5;
+  private readonly pricePerHour = 5;
 
-  createEntry(plateNumber: string): Ticket {
-    const carId = this.tickets.length + 1;
-    if (this.tickets.some((t) => t.carId === carId && !t.exitTime)) {
-      throw new Error('This car is already parked');
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createEntry(plateNumber: string) {
+    let car = await this.prisma.car.findUnique({ where: { plateNumber } });
+    if (!car) {
+      car = await this.prisma.car.create({ data: { plateNumber } });
     }
-  }
 
-  createExit(id: number): Ticket | string {
-    const ticket = this.tickets.find((t) => t.id === id);
-    if (!ticket) return 'Ticket not found';
+    const activeTicket = await this.prisma.ticket.findFirst({
+      where: { carId: car.id, exitTime: null },
+    });
 
-    ticket.exitTime = new Date();
-    const diffMs = ticket.exitTime.getTime() - ticket.entryTime.getTime();
-    const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-    ticket.totalAmount = hours * this.pricePerHour;
+    if (activeTicket) {
+      throw new BadRequestException('Car is already parked.');
+    }
+
+    const ticket = await this.prisma.ticket.create({
+      data: { carId: car.id, entryTime: new Date() },
+      include: { car: true },
+    });
 
     return ticket;
   }
 
-  getTicket(id: number): Ticket | string {
-    const ticket = this.tickets.find((t) => t.id === id);
-    return ticket ?? 'Ticket not found';
+  async createExit(id: number) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found.');
+    }
+
+    if (ticket.exitTime) {
+      throw new BadRequestException('Car has already left.');
+    }
+
+    const exitTime = new Date();
+    const diffMs = exitTime.getTime() - ticket.entryTime.getTime();
+    const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+    const totalAmount = hours * this.pricePerHour;
+
+    const updatedTicket = await this.prisma.ticket.update({
+      where: { id },
+      data: { exitTime, totalAmount },
+      include: { car: true },
+    });
+
+    return updatedTicket;
+  }
+
+  async getTicket(id: number) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { car: true },
+    });
+
+    if (!ticket) throw new NotFoundException('Ticket not found.');
+
+    return ticket;
   }
 }
