@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url  	    = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum SubscriptionType {
@@ -13,8 +13,8 @@ enum SubscriptionType {
 }
 
 model Car {
-  id                 Int       @id @default(autoincrement())
-  plateNumber        String    @unique
+  id                 Int               @id @default(autoincrement())
+  plateNumber        String            @unique
   subscriptionType   SubscriptionType?
   subscriptionExpiry DateTime?
   tickets            Ticket[]
@@ -23,13 +23,30 @@ model Car {
 }
 
 model Ticket {
-  id          Int       @id @default(autoincrement())
-  entryTime   DateTime  @default(now())
-  exitTime    DateTime?
-  totalAmount Float?
-  isPaid      Boolean   @default(false)
-  carId       Int
-  car         Car       @relation(fields: [carId], references: [id])
+  id           Int        @id @default(autoincrement())
+  entryTime    DateTime   @default(now())
+  exitTime     DateTime?
+  totalAmount  Float?
+  isPaid       Boolean    @default(false)
+  carId        Int
+  parkingLotId Int
+  car          Car        @relation(fields: [carId], references: [id])
+  parkingLot   ParkingLot @relation(fields: [parkingLotId], references: [id])
 
   @@map("tickets")
+}
+
+model ParkingLot {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  location        String?
+  totalSpots      Int
+  occupiedSpots   Int      @default(0)
+  pricePerHour    Float    @default(5)
+  freeHoursPerDay Int      @default(2)
+  tickets         Ticket[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("parking_lots")
 }

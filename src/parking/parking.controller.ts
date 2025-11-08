@@ -12,9 +12,9 @@ export class ParkingController {
     return this.parkingService.createEntry(data.plateNumber);
   }
 
-  @Post('exit/:id')
-  createExit(@Param('id') id: number): Promise<Ticket> {
-    return this.parkingService.createExit(Number(id));
+  @Post('exit')
+  createExit(@Body() data: { plateNumber: string }) {
+    return this.parkingService.createExit(data.plateNumber);
   }
 
   @Get(':id')
