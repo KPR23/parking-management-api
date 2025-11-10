@@ -3,13 +3,14 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Ticket } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ParkingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createEntry(parkingLotId: number, plateNumber: string) {
+  async entry(parkingLotId: number, plateNumber: string) {
     const parkingLot = await this.prisma.parkingLot.findUnique({
       where: { id: parkingLotId },
     });
@@ -57,7 +58,7 @@ export class ParkingService {
     return ticket;
   }
 
-  async createExit(plateNumber: string) {
+  async exit(plateNumber: string) {
     const car = await this.prisma.car.findUnique({
       where: { plateNumber },
       include: {
@@ -132,7 +133,7 @@ export class ParkingService {
     return updatedTicket;
   }
 
-  async getTicket(id: number) {
+  async getTicket(id: number): Promise<Ticket | null> {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: { car: true },
