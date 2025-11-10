@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { Ticket } from '@prisma/client';
 import { CreateEntryDto } from './dto/parking-entry.dto';
-import { CreateExitDto } from './dto/ parking-exit.dto';
+import { CreateExitDto } from './dto/parking-exit.dto';
 import { ParkingService } from './parking.service';
 
 @Controller('parking')

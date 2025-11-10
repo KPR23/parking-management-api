@@ -8,8 +8,8 @@ import {
   Put,
 } from '@nestjs/common';
 import { ParkingLot } from '@prisma/client';
-import { CreateParkingLotDto } from './dto/create-parking-lot.dto';
-import { UpdateParkingLotDto } from './dto/update-parking-lot.dto';
+import { CreateParkingLotDto } from './dto/parking-lot-create';
+import { UpdateParkingLotDto } from './dto/parking-lot-update';
 import { ParkingLotService } from './parking-lot.service';
 
 @Controller('parking-lot')

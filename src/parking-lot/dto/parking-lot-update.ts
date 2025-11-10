@@ -1,16 +1,9 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsPositive,
-  IsString,
-  Min,
-} from 'class-validator';
+import { IsInt, IsOptional, IsPositive, IsString, Min } from 'class-validator';
 
 export class UpdateParkingLotDto {
   @IsString()
-  @IsNotEmpty()
-  name: string;
+  @IsOptional()
+  name?: string;
 
   @IsString()
   @IsOptional()
@@ -18,14 +11,14 @@ export class UpdateParkingLotDto {
 
   @IsInt()
   @IsPositive()
-  @IsNotEmpty()
-  totalSpots: number;
-
   @IsOptional()
+  totalSpots?: number;
+
   @Min(0)
+  @IsOptional()
   pricePerHour?: number;
 
-  @IsOptional()
   @Min(0)
+  @IsOptional()
   freeHoursPerDay?: number;
 }
