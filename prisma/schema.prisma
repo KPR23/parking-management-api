@@ -10,14 +10,14 @@ datasource db {
 enum SubscriptionType {
   monthly
   yearly
+  lifetime
 }
 
 model Car {
-  id                 Int               @id @default(autoincrement())
-  plateNumber        String            @unique
-  subscriptionType   SubscriptionType?
-  subscriptionExpiry DateTime?
-  tickets            Ticket[]
+  id           Int           @id @default(autoincrement())
+  plateNumber  String        @unique
+  tickets      Ticket[]
+  subscription Subscription?
 
   @@map("cars")
 }
@@ -49,4 +49,15 @@ model ParkingLot {
   updatedAt       DateTime @updatedAt
 
   @@map("parking_lots")
+}
+
+model Subscription {
+  id        Int              @id @default(autoincrement())
+  type      SubscriptionType
+  startDate DateTime         @default(now())
+  endDate   DateTime
+  carId     Int              @unique
+  car       Car              @relation(fields: [carId], references: [id])
+
+  @@map("subscriptions")
 }
