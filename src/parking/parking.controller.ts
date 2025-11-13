@@ -8,6 +8,11 @@ import { ParkingService } from './parking.service';
 export class ParkingController {
   constructor(private readonly parkingService: ParkingService) {}
 
+  @Get(':id')
+  getTicket(@Param('id') id: number): Promise<Ticket | null> {
+    return this.parkingService.getTicket(Number(id));
+  }
+
   @Post('entry')
   createEntry(@Body() data: CreateEntryDto): Promise<Ticket> {
     return this.parkingService.entry(data.parkingLotId, data.plateNumber);
@@ -16,10 +21,5 @@ export class ParkingController {
   @Post('exit')
   createExit(@Body() data: CreateExitDto): Promise<Ticket> {
     return this.parkingService.exit(data.plateNumber);
-  }
-
-  @Get(':id')
-  getTicket(@Param('id') id: number): Promise<Ticket | null> {
-    return this.parkingService.getTicket(Number(id));
   }
 }

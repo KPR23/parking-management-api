@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { ParkingLot } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateParkingLotDto } from './dto/parking-lot-create';
-import { UpdateParkingLotDto } from './dto/parking-lot-update';
+import { CreateParkingLotDto } from './dto/parking-lot-create.dto';
+import { UpdateParkingLotDto } from './dto/parking-lot-update.dto';
 
 @Injectable()
 export class ParkingLotService {
@@ -48,7 +48,7 @@ export class ParkingLotService {
 
   async update(id: number, data: UpdateParkingLotDto): Promise<ParkingLot> {
     try {
-      return await this.prisma.parkingLot.update({
+      return this.prisma.parkingLot.update({
         where: { id },
         data,
       });
@@ -59,7 +59,7 @@ export class ParkingLotService {
 
   async delete(id: number): Promise<ParkingLot> {
     try {
-      return await this.prisma.parkingLot.delete({
+      return this.prisma.parkingLot.delete({
         where: { id },
       });
     } catch {
