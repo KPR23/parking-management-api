@@ -10,6 +10,34 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ParkingService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getTicket(id: number): Promise<Ticket | null> {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+      include: { car: true },
+    });
+
+    if (!ticket) throw new NotFoundException('Ticket not found.');
+
+    return ticket;
+  }
+
+  async getActiveTicketByPlate(plateNumber: string): Promise<Ticket> {
+    const ticket = await this.prisma.ticket.findFirst({
+      where: {
+        car: { plateNumber },
+        exitTime: null,
+      },
+      include: { car: true },
+    });
+
+    if (!ticket)
+      throw new NotFoundException(
+        `No active ticket found for car with plate number ${plateNumber}`,
+      );
+
+    return ticket;
+  }
+
   async entry(parkingLotId: number, plateNumber: string) {
     const parkingLot = await this.prisma.parkingLot.findUnique({
       where: { id: parkingLotId },
@@ -66,6 +94,7 @@ export class ParkingService {
           where: { exitTime: null },
           select: { id: true, entryTime: true, parkingLotId: true },
         },
+        subscription: true,
       },
     });
     if (!car) throw new NotFoundException('Car not found.');
@@ -79,13 +108,35 @@ export class ParkingService {
     });
     if (!parkingLot) throw new NotFoundException('Parking lot not found.');
 
-    const pricePerHour = parkingLot ? parkingLot.pricePerHour : 5;
-    const freeHoursPerDay = parkingLot ? parkingLot.freeHoursPerDay : 2;
-
     const exitTime = new Date();
     const hours = Math.ceil(
       (exitTime.getTime() - activeTicket.entryTime.getTime()) / 3_600_000,
     );
+
+    // Subscription
+    if (car.subscription && car.subscription.endDate > new Date()) {
+      const updatedTicket = await this.prisma.ticket.update({
+        where: { id: activeTicket.id },
+        data: {
+          exitTime,
+          totalAmount: 0,
+          isPaid: true,
+        },
+        include: { car: true },
+      });
+
+      if (parkingLot.occupiedSpots > 0) {
+        await this.prisma.parkingLot.update({
+          where: { id: parkingLot.id },
+          data: { occupiedSpots: { decrement: 1 } },
+        });
+      }
+
+      return updatedTicket;
+    }
+
+    const pricePerHour = parkingLot.pricePerHour ?? 5;
+    const freeHoursPerDay = parkingLot.freeHoursPerDay ?? 2;
 
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
@@ -131,16 +182,5 @@ export class ParkingService {
     }
 
     return updatedTicket;
-  }
-
-  async getTicket(id: number): Promise<Ticket | null> {
-    const ticket = await this.prisma.ticket.findUnique({
-      where: { id },
-      include: { car: true },
-    });
-
-    if (!ticket) throw new NotFoundException('Ticket not found.');
-
-    return ticket;
   }
 }

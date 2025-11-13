@@ -66,6 +66,18 @@ export class SubscriptionService {
       );
     }
 
+    if (car.subscription && car.subscription.endDate > new Date()) {
+      throw new BadRequestException(
+        `Car with ID ${data.carId} already has an active subscription until ${car.subscription.endDate.toISOString()}.`,
+      );
+    }
+
+    if (car.subscription && car.subscription.endDate <= new Date()) {
+      await this.prisma.subscription.delete({
+        where: { id: car.subscription.id },
+      });
+    }
+
     const startDate = data.startDate ? new Date(data.startDate) : new Date();
     const endDate = new Date(startDate);
 

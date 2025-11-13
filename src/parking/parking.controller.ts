@@ -8,6 +8,13 @@ import { ParkingService } from './parking.service';
 export class ParkingController {
   constructor(private readonly parkingService: ParkingService) {}
 
+  @Get('active/:plateNumber')
+  getActiveTicket(
+    @Param('plateNumber') plateNumber: string,
+  ): Promise<Ticket | null> {
+    return this.parkingService.getActiveTicketByPlate(plateNumber);
+  }
+
   @Get(':id')
   getTicket(@Param('id') id: number): Promise<Ticket | null> {
     return this.parkingService.getTicket(Number(id));
