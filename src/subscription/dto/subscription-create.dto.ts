@@ -17,10 +17,6 @@ export class CreateSubscriptionDto {
   @IsOptional()
   startDate?: string;
 
-  @IsISO8601()
-  @IsNotEmpty()
-  endDate: string;
-
   @IsInt()
   @Min(1)
   @IsNotEmpty()

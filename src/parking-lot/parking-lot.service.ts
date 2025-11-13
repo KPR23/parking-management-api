@@ -48,7 +48,7 @@ export class ParkingLotService {
 
   async update(id: number, data: UpdateParkingLotDto): Promise<ParkingLot> {
     try {
-      return await this.prisma.parkingLot.update({
+      return this.prisma.parkingLot.update({
         where: { id },
         data,
       });
@@ -59,7 +59,7 @@ export class ParkingLotService {
 
   async delete(id: number): Promise<ParkingLot> {
     try {
-      return await this.prisma.parkingLot.delete({
+      return this.prisma.parkingLot.delete({
         where: { id },
       });
     } catch {

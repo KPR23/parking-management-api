@@ -6,6 +6,8 @@ import {
 import { Prisma, Subscription } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSubscriptionDto } from './dto/subscription-create.dto';
+import { RenewSubscriptionDto } from './dto/subscription-renew.dto';
+import { UpdateSubscriptionDto } from './dto/subscription-update.dto';
 
 @Injectable()
 export class SubscriptionService {
@@ -13,7 +15,7 @@ export class SubscriptionService {
 
   async getSubscriptionById(id: number) {
     try {
-      return await this.prisma.subscription.findUniqueOrThrow({
+      return this.prisma.subscription.findUniqueOrThrow({
         where: { id },
         include: {
           car: true,
@@ -32,7 +34,7 @@ export class SubscriptionService {
 
   async getSubscriptionByPlateNumber(plateNumber: string) {
     try {
-      return await this.prisma.subscription.findFirstOrThrow({
+      return this.prisma.subscription.findFirstOrThrow({
         where: {
           car: {
             plateNumber: plateNumber,
@@ -45,7 +47,7 @@ export class SubscriptionService {
         error.code === 'P2025'
       ) {
         throw new NotFoundException(
-          `Subscription with plate number ${plateNumber} not found.`,
+          `Car with plate number ${plateNumber} has not active subscription.`,
         );
       }
       throw error;
@@ -64,18 +66,33 @@ export class SubscriptionService {
       );
     }
 
-    if (car.subscription) {
-      throw new BadRequestException(
-        `Car with ID ${data.carId} already has an active subscription.`,
-      );
+    const startDate = data.startDate ? new Date(data.startDate) : new Date();
+    const endDate = new Date(startDate);
+
+    switch (data.type) {
+      case 'monthly':
+        endDate.setMonth(endDate.getMonth() + 1);
+        break;
+      case 'yearly':
+        endDate.setFullYear(endDate.getFullYear() + 1);
+        break;
+      case 'lifetime':
+        endDate.setFullYear(endDate.getFullYear() + 100);
+        break;
+      default:
+        throw new BadRequestException(`Unknown subscription type`);
+    }
+
+    if (car.subscription && car.subscription.endDate > new Date()) {
+      throw new BadRequestException('Car already has an active subscription.');
     }
 
     try {
-      return await this.prisma.subscription.create({
+      return this.prisma.subscription.create({
         data: {
           type: data.type,
-          startDate: data.startDate ? new Date(data.startDate) : new Date(),
-          endDate: new Date(data.endDate),
+          startDate,
+          endDate,
           car: { connect: { id: data.carId } },
         },
       });
@@ -100,5 +117,60 @@ export class SubscriptionService {
 
       throw error;
     }
+  }
+
+  async renew(id: number, data: RenewSubscriptionDto): Promise<Subscription> {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { id },
+    });
+
+    if (!subscription)
+      throw new NotFoundException(`Subscription with ID ${id} not found.`);
+
+    if (new Date(subscription.endDate) < new Date()) {
+      throw new BadRequestException(`This subscription has already expired.`);
+    }
+
+    const newEndDate = new Date(subscription.endDate);
+    const type = data.type ?? subscription.type;
+
+    switch (type) {
+      case 'monthly':
+        newEndDate.setMonth(newEndDate.getMonth() + 1);
+        break;
+      case 'yearly':
+        newEndDate.setFullYear(newEndDate.getFullYear() + 1);
+        break;
+      case 'lifetime':
+        newEndDate.setFullYear(newEndDate.getFullYear() + 100);
+        break;
+      default:
+        throw new BadRequestException(`Unknown subscription type`);
+    }
+    return this.prisma.subscription.update({
+      where: { id },
+      data: { endDate: newEndDate },
+    });
+  }
+
+  async update(id: number, data: UpdateSubscriptionDto): Promise<Subscription> {
+    return this.prisma.subscription
+      .update({
+        where: { id },
+        data,
+      })
+      .catch(() => {
+        throw new NotFoundException(`Subscription with ID ${id} not found.`);
+      });
+  }
+
+  async delete(id: number): Promise<Subscription> {
+    return this.prisma.subscription
+      .delete({
+        where: { id },
+      })
+      .catch(() => {
+        throw new NotFoundException(`Subscription with ID ${id} not found.`);
+      });
   }
 }
