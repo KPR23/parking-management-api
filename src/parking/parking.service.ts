@@ -10,6 +10,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ParkingService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async updateParkingOccupancy(
+    parkingLotId: number,
+    increment: boolean,
+  ) {
+    return this.prisma.parkingLot.update({
+      where: { id: parkingLotId },
+      data: {
+        occupiedSpots: { [increment ? 'increment' : 'decrement']: 1 },
+      },
+    });
+  }
+
   async getTicket(id: number): Promise<Ticket | null> {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
@@ -78,11 +90,7 @@ export class ParkingService {
       include: { car: true },
     });
 
-    await this.prisma.parkingLot.update({
-      where: { id: parkingLot.id },
-      data: { occupiedSpots: { increment: 1 } },
-    });
-
+    await this.updateParkingOccupancy(parkingLot.id, true);
     return ticket;
   }
 
@@ -113,7 +121,7 @@ export class ParkingService {
       (exitTime.getTime() - activeTicket.entryTime.getTime()) / 3_600_000,
     );
 
-    // Subscription
+    // Subscription - No Charge
     if (car.subscription && car.subscription.endDate > new Date()) {
       const updatedTicket = await this.prisma.ticket.update({
         where: { id: activeTicket.id },
@@ -126,15 +134,13 @@ export class ParkingService {
       });
 
       if (parkingLot.occupiedSpots > 0) {
-        await this.prisma.parkingLot.update({
-          where: { id: parkingLot.id },
-          data: { occupiedSpots: { decrement: 1 } },
-        });
+        await this.updateParkingOccupancy(parkingLot.id, false);
       }
 
       return updatedTicket;
     }
 
+    // No Subscription - Calculate parking fee
     const pricePerHour = parkingLot.pricePerHour ?? 5;
     const freeHoursPerDay = parkingLot.freeHoursPerDay ?? 2;
 
@@ -156,7 +162,7 @@ export class ParkingService {
       if (hours <= freeHoursPerDay) {
         totalAmount = 0;
       } else {
-        const chargeableHours = Math.ceil(hours - freeHoursPerDay);
+        const chargeableHours = Math.max(0, Math.ceil(hours - freeHoursPerDay));
         totalAmount = chargeableHours * pricePerHour;
       }
     } else {
@@ -174,12 +180,7 @@ export class ParkingService {
       include: { car: true },
     });
 
-    if (parkingLot.occupiedSpots > 0) {
-      await this.prisma.parkingLot.update({
-        where: { id: parkingLot.id },
-        data: { occupiedSpots: { decrement: 1 } },
-      });
-    }
+    await this.updateParkingOccupancy(parkingLot.id, false);
 
     return updatedTicket;
   }
