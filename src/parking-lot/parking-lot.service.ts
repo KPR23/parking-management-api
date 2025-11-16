@@ -58,12 +58,9 @@ export class ParkingLotService {
   }
 
   async delete(id: number): Promise<ParkingLot> {
-    try {
-      return this.prisma.parkingLot.delete({
-        where: { id },
-      });
-    } catch {
-      throw new NotFoundException('Parking lot not found.');
-    }
+    return this.prisma.$transaction(async (tx) => {
+      await tx.ticket.deleteMany({ where: { parkingLotId: id } });
+      return tx.parkingLot.delete({ where: { id } });
+    });
   }
 }

@@ -11,6 +11,10 @@ export class UpdateSubscriptionDto {
   startDate?: string;
 
   @IsOptional()
+  @IsISO8601()
+  endDate?: string;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   carId: number;

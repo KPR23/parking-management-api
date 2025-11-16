@@ -14,44 +14,35 @@ export class SubscriptionService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getSubscriptionById(id: number) {
-    try {
-      return this.prisma.subscription.findUniqueOrThrow({
-        where: { id },
-        include: {
-          car: true,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new NotFoundException(`Subscription with ID ${id} not found.`);
-      }
-      throw error;
+    const subscription = await this.prisma.subscription.findFirst({
+      where: {
+        id,
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(`Subscription with ID ${id} not found.`);
     }
+
+    return subscription;
   }
 
   async getSubscriptionByPlateNumber(plateNumber: string) {
-    try {
-      return this.prisma.subscription.findFirstOrThrow({
-        where: {
-          car: {
-            plateNumber: plateNumber,
-          },
+    const subscription = await this.prisma.subscription.findFirst({
+      where: {
+        car: {
+          plateNumber,
         },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2025'
-      ) {
-        throw new NotFoundException(
-          `Car with plate number ${plateNumber} has not active subscription.`,
-        );
-      }
-      throw error;
+      },
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(
+        `Car with plate number ${plateNumber} has no active subscription.`,
+      );
     }
+
+    return subscription;
   }
 
   async create(data: CreateSubscriptionDto): Promise<Subscription> {
@@ -132,48 +123,58 @@ export class SubscriptionService {
   }
 
   async renew(id: number, data: RenewSubscriptionDto): Promise<Subscription> {
-    const subscription = await this.prisma.subscription.findUnique({
-      where: { id },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const subscription = await tx.subscription.findUnique({
+        where: { id },
+      });
 
-    if (!subscription)
-      throw new NotFoundException(`Subscription with ID ${id} not found.`);
+      if (!subscription)
+        throw new NotFoundException(`Subscription with ID ${id} not found.`);
 
-    if (new Date(subscription.endDate) < new Date()) {
-      throw new BadRequestException(`This subscription has already expired.`);
-    }
+      if (new Date(subscription.endDate) < new Date()) {
+        throw new BadRequestException(`This subscription has already expired.`);
+      }
 
-    const newEndDate = new Date(subscription.endDate);
-    const type = data.type ?? subscription.type;
+      const newEndDate = new Date(subscription.endDate);
+      const type = data.type ?? subscription.type;
 
-    switch (type) {
-      case 'monthly':
-        newEndDate.setMonth(newEndDate.getMonth() + 1);
-        break;
-      case 'yearly':
-        newEndDate.setFullYear(newEndDate.getFullYear() + 1);
-        break;
-      case 'lifetime':
-        newEndDate.setFullYear(newEndDate.getFullYear() + 100);
-        break;
-      default:
-        throw new BadRequestException(`Unknown subscription type`);
-    }
-    return this.prisma.subscription.update({
-      where: { id },
-      data: { endDate: newEndDate },
+      switch (type) {
+        case 'monthly':
+          newEndDate.setMonth(newEndDate.getMonth() + 1);
+          break;
+        case 'yearly':
+          newEndDate.setFullYear(newEndDate.getFullYear() + 1);
+          break;
+        case 'lifetime':
+          newEndDate.setFullYear(newEndDate.getFullYear() + 100);
+          break;
+        default:
+          throw new BadRequestException(`Unknown subscription type`);
+      }
+      return tx.subscription.update({
+        where: { id },
+        data: { endDate: newEndDate },
+      });
     });
   }
 
   async update(id: number, data: UpdateSubscriptionDto): Promise<Subscription> {
-    return this.prisma.subscription
-      .update({
-        where: { id },
-        data,
-      })
-      .catch(() => {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.subscription.findUnique({ where: { id } });
+      if (!existing)
         throw new NotFoundException(`Subscription with ID ${id} not found.`);
-      });
+
+      const startDate = data.startDate ?? existing.startDate;
+      const endDate = data.endDate ?? existing.endDate;
+
+      if (endDate < startDate) {
+        throw new BadRequestException(
+          'End date cannot be earlier than start date.',
+        );
+      }
+
+      return tx.subscription.update({ where: { id }, data });
+    });
   }
 
   async delete(id: number): Promise<Subscription> {

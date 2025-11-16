@@ -17,7 +17,7 @@ model Car {
   id           Int           @id @default(autoincrement())
   plateNumber  String        @unique
   tickets      Ticket[]
-  subscription Subscription?
+  subscription Subscription? @relation("CarSubscription")
 
   @@map("cars")
 }
@@ -57,7 +57,7 @@ model Subscription {
   startDate DateTime         @default(now())
   endDate   DateTime
   carId     Int              @unique
-  car       Car              @relation(fields: [carId], references: [id])
+  car       Car              @relation("CarSubscription", fields: [carId], references: [id])
 
   @@map("subscriptions")
 }
