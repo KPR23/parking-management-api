@@ -13,6 +13,62 @@ enum SubscriptionType {
   lifetime
 }
 
+model ParkingLot {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  location        String?
+  totalSpots      Int
+  occupiedSpots   Int      @default(0)
+  pricePerHour    Float    @default(5)
+  freeHoursPerDay Int      @default(2)
+  tickets         Ticket[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  gates           Gate[]
+
+  @@map("parking_lots")
+}
+
+enum GateType {
+  ENTRY
+  EXIT
+}
+
+enum GateStatus {
+  OPEN
+  CLOSED
+  ERROR
+}
+
+model Gate {
+  id           Int           @id @default(autoincrement())
+  parkingLot   ParkingLot    @relation(fields: [parkingLotId], references: [id])
+  parkingLotId Int
+  type         GateType
+  status       GateStatus    @default(CLOSED)
+  cameraEvents CameraEvent[]
+
+  @@map("gates")
+}
+
+enum CameraEventType {
+  ENTRY_DETECTED
+  EXIT_DETECTED
+}
+
+model CameraEvent {
+  id          Int             @id @default(autoincrement())
+  plateNumber String
+  timestamp   DateTime        @default(now())
+  imageUrl    String?
+  type        CameraEventType
+
+  gateId Int?
+  gate   Gate? @relation(fields: [gateId], references: [id])
+
+  @@map("camera_events")
+}
+
 model Car {
   id           Int           @id @default(autoincrement())
   plateNumber  String        @unique
@@ -34,21 +90,6 @@ model Ticket {
   parkingLot   ParkingLot @relation(fields: [parkingLotId], references: [id])
 
   @@map("tickets")
-}
-
-model ParkingLot {
-  id              Int      @id @default(autoincrement())
-  name            String   @unique
-  location        String?
-  totalSpots      Int
-  occupiedSpots   Int      @default(0)
-  pricePerHour    Float    @default(5)
-  freeHoursPerDay Int      @default(2)
-  tickets         Ticket[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@map("parking_lots")
 }
 
 model Subscription {
