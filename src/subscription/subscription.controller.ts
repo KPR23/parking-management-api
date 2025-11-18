@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Put,
@@ -22,11 +23,11 @@ export class SubscriptionController {
 
   @Get()
   async getSubscription(
-    @Query('id') id?: string,
+    @Query('id', ParseIntPipe) id?: number,
     @Query('plateNumber') plateNumber?: string,
   ): Promise<Subscription> {
     if (id) {
-      return this.subscriptionService.getSubscriptionById(Number(id));
+      return this.subscriptionService.getSubscriptionById(id);
     }
 
     if (plateNumber) {
@@ -45,22 +46,22 @@ export class SubscriptionController {
 
   @Patch(':id/renew')
   renew(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: RenewSubscriptionDto,
   ): Promise<Subscription> {
-    return this.subscriptionService.renew(Number(id), data);
+    return this.subscriptionService.renew(id, data);
   }
 
   @Put(':id')
   update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdateSubscriptionDto,
   ): Promise<Subscription> {
-    return this.subscriptionService.update(Number(id), data);
+    return this.subscriptionService.update(id, data);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: number): Promise<Subscription> {
-    return this.subscriptionService.delete(Number(id));
+  delete(@Param('id', ParseIntPipe) id: number): Promise<Subscription> {
+    return this.subscriptionService.delete(id);
   }
 }
