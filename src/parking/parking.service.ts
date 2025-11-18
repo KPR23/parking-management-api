@@ -54,6 +54,7 @@ export class ParkingService {
       const parkingLot = await tx.parkingLot.findUnique({
         where: { id: parkingLotId },
       });
+
       if (!parkingLot) throw new NotFoundException('Parking lot not found.');
 
       const occupiedSpotsCount = await tx.ticket.count({
