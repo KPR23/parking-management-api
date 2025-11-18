@@ -21,7 +21,7 @@ export class ParkingService {
     });
   }
 
-  async getTicket(id: number): Promise<Ticket | null> {
+  async getTicket(id: number): Promise<Ticket> {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
       include: { car: true },
@@ -83,14 +83,14 @@ export class ParkingService {
       const ticket = await tx.ticket.create({
         data: {
           carId: car.id,
-          parkingLotId: parkingLot.id,
+          parkingLotId,
           entryTime: new Date(),
         },
-
         include: { car: true },
       });
 
-      await this.updateParkingOccupancy(tx, parkingLot.id, true);
+      await this.updateParkingOccupancy(tx, parkingLotId, true);
+
       return ticket;
     });
   }
@@ -107,6 +107,7 @@ export class ParkingService {
           subscription: true,
         },
       });
+
       if (!car) throw new NotFoundException('Car not found.');
 
       const activeTicket = car.tickets[0];
@@ -123,26 +124,28 @@ export class ParkingService {
         (exitTime.getTime() - activeTicket.entryTime.getTime()) / 3_600_000,
       );
 
-      // Subscription - No Charge
+      // Subscription = free exit
       if (car.subscription && car.subscription.endDate > new Date()) {
-        const updatedTicket = await tx.ticket.update({
+        const updated = await tx.ticket.update({
           where: { id: activeTicket.id },
-          data: {
-            exitTime,
-            totalAmount: 0,
-            isPaid: true,
-          },
-          include: { car: { include: { subscription: true } } },
+          data: { exitTime, totalAmount: 0, isPaid: true },
         });
 
-        if (parkingLot.occupiedSpots > 0) {
-          await this.updateParkingOccupancy(tx, parkingLot.id, false);
-        }
+        // Fetch full ticket with subscription
+        const full = await tx.ticket.findUniqueOrThrow({
+          where: { id: updated.id },
+          include: {
+            car: {
+              include: { subscription: true },
+            },
+          },
+        });
 
-        return updatedTicket;
+        await this.updateParkingOccupancy(tx, parkingLot.id, false);
+        return full;
       }
 
-      // No Subscription - Calculate parking fee
+      // No subscription → calculate fee
       const pricePerHour = parkingLot.pricePerHour ?? 5;
       const freeHoursPerDay = parkingLot.freeHoursPerDay ?? 2;
 
@@ -154,40 +157,40 @@ export class ParkingService {
           carId: car.id,
           entryTime: { gte: startOfToday },
           exitTime: { not: null },
-          totalAmount: { equals: 0 },
+          totalAmount: 0,
         },
       });
 
       let totalAmount = 0;
 
       if (!alreadyUsedFree) {
-        if (hours <= freeHoursPerDay) {
-          totalAmount = 0;
-        } else {
-          const chargeableHours = Math.max(
-            0,
-            Math.ceil(hours - freeHoursPerDay),
-          );
-          totalAmount = chargeableHours * pricePerHour;
+        if (hours > freeHoursPerDay) {
+          totalAmount = Math.ceil(hours - freeHoursPerDay) * pricePerHour;
         }
       } else {
-        const paidHours = Math.ceil(hours);
-        totalAmount = paidHours * pricePerHour;
+        totalAmount = Math.ceil(hours) * pricePerHour;
       }
 
-      const updatedTicket = await tx.ticket.update({
+      const updated = await tx.ticket.update({
         where: { id: activeTicket.id },
         data: {
           exitTime,
           totalAmount,
           isPaid: totalAmount === 0,
         },
-        include: { car: true },
+      });
+
+      const full = await tx.ticket.findUniqueOrThrow({
+        where: { id: updated.id },
+        include: {
+          car: {
+            include: { subscription: true },
+          },
+        },
       });
 
       await this.updateParkingOccupancy(tx, parkingLot.id, false);
-
-      return updatedTicket;
+      return full;
     });
   }
 }

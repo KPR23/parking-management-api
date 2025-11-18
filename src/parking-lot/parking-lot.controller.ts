@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -17,13 +18,13 @@ export class ParkingLotController {
   constructor(private readonly parkingLotService: ParkingLotService) {}
 
   @Get()
-  getAll(): Promise<ParkingLot[] | null> {
+  getAll(): Promise<ParkingLot[]> {
     return this.parkingLotService.getAll();
   }
 
   @Get(':id')
-  getById(@Param('id') id: number): Promise<ParkingLot | null> {
-    return this.parkingLotService.getById(Number(id));
+  getById(@Param('id', ParseIntPipe) id: number): Promise<ParkingLot> {
+    return this.parkingLotService.getById(id);
   }
 
   @Post()
@@ -33,14 +34,14 @@ export class ParkingLotController {
 
   @Put(':id')
   update(
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body() data: UpdateParkingLotDto,
   ): Promise<ParkingLot> {
-    return this.parkingLotService.update(Number(id), data);
+    return this.parkingLotService.update(id, data);
   }
 
   @Delete(':id')
-  delete(@Param('id') id: number): Promise<ParkingLot> {
-    return this.parkingLotService.delete(Number(id));
+  delete(@Param('id', ParseIntPipe) id: number): Promise<ParkingLot> {
+    return this.parkingLotService.delete(id);
   }
 }
