@@ -4,6 +4,7 @@ export class ParkingExitResponse {
   exitTime: Date;
   totalAmount: number;
   isPaid: boolean;
+  usedDailyFree: boolean;
   parkingLotId: number;
   car: {
     id: number;

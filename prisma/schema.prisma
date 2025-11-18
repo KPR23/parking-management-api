@@ -79,15 +79,16 @@ model Car {
 }
 
 model Ticket {
-  id           Int        @id @default(autoincrement())
-  entryTime    DateTime   @default(now())
-  exitTime     DateTime?
-  totalAmount  Float?
-  isPaid       Boolean    @default(false)
-  carId        Int
-  parkingLotId Int
-  car          Car        @relation(fields: [carId], references: [id])
-  parkingLot   ParkingLot @relation(fields: [parkingLotId], references: [id])
+  id            Int        @id @default(autoincrement())
+  entryTime     DateTime   @default(now())
+  exitTime      DateTime?
+  totalAmount   Float?
+  isPaid        Boolean    @default(false)
+  usedDailyFree Boolean    @default(false)
+  carId         Int
+  parkingLotId  Int
+  car           Car        @relation(fields: [carId], references: [id])
+  parkingLot    ParkingLot @relation(fields: [parkingLotId], references: [id])
 
   @@map("tickets")
 }

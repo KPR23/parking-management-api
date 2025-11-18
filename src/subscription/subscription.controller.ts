@@ -23,11 +23,11 @@ export class SubscriptionController {
 
   @Get()
   async getSubscription(
-    @Query('id', ParseIntPipe) id?: number,
+    @Query('id') id?: number,
     @Query('plateNumber') plateNumber?: string,
   ): Promise<Subscription> {
     if (id) {
-      return this.subscriptionService.getSubscriptionById(id);
+      return this.subscriptionService.getSubscriptionById(Number(id));
     }
 
     if (plateNumber) {

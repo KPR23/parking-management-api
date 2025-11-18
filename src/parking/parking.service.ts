@@ -156,19 +156,24 @@ export class ParkingService {
         where: {
           carId: car.id,
           entryTime: { gte: startOfToday },
-          exitTime: { not: null },
-          totalAmount: 0,
+          usedDailyFree: true,
         },
       });
 
       let totalAmount = 0;
+      let usedDailyFree = false;
 
       if (!alreadyUsedFree) {
         if (hours > freeHoursPerDay) {
-          totalAmount = Math.ceil(hours - freeHoursPerDay) * pricePerHour;
+          const billableHours = Math.ceil(hours - freeHoursPerDay);
+          totalAmount = billableHours * pricePerHour;
+        } else {
+          totalAmount = 0;
         }
+        usedDailyFree = true;
       } else {
         totalAmount = Math.ceil(hours) * pricePerHour;
+        usedDailyFree = false;
       }
 
       const updated = await tx.ticket.update({
@@ -177,6 +182,7 @@ export class ParkingService {
           exitTime,
           totalAmount,
           isPaid: totalAmount === 0,
+          usedDailyFree,
         },
       });
 
