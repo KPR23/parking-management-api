@@ -13,29 +13,6 @@ enum SubscriptionType {
   lifetime
 }
 
-model Car {
-  id           Int           @id @default(autoincrement())
-  plateNumber  String        @unique
-  tickets      Ticket[]
-  subscription Subscription? @relation("CarSubscription")
-
-  @@map("cars")
-}
-
-model Ticket {
-  id           Int        @id @default(autoincrement())
-  entryTime    DateTime   @default(now())
-  exitTime     DateTime?
-  totalAmount  Float?
-  isPaid       Boolean    @default(false)
-  carId        Int
-  parkingLotId Int
-  car          Car        @relation(fields: [carId], references: [id])
-  parkingLot   ParkingLot @relation(fields: [parkingLotId], references: [id])
-
-  @@map("tickets")
-}
-
 model ParkingLot {
   id              Int      @id @default(autoincrement())
   name            String   @unique
@@ -47,8 +24,73 @@ model ParkingLot {
   tickets         Ticket[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  gates           Gate[]
 
   @@map("parking_lots")
+}
+
+enum GateType {
+  ENTRY
+  EXIT
+}
+
+enum GateStatus {
+  OPEN
+  CLOSED
+  ERROR
+}
+
+model Gate {
+  id           Int           @id @default(autoincrement())
+  parkingLot   ParkingLot    @relation(fields: [parkingLotId], references: [id])
+  parkingLotId Int
+  type         GateType
+  status       GateStatus    @default(CLOSED)
+  cameraEvents CameraEvent[]
+
+  @@map("gates")
+}
+
+enum CameraEventType {
+  ENTRY_DETECTED
+  EXIT_DETECTED
+}
+
+model CameraEvent {
+  id          Int             @id @default(autoincrement())
+  plateNumber String
+  timestamp   DateTime        @default(now())
+  imageUrl    String?
+  type        CameraEventType
+
+  gateId Int?
+  gate   Gate? @relation(fields: [gateId], references: [id])
+
+  @@map("camera_events")
+}
+
+model Car {
+  id           Int           @id @default(autoincrement())
+  plateNumber  String        @unique
+  tickets      Ticket[]
+  subscription Subscription? @relation("CarSubscription")
+
+  @@map("cars")
+}
+
+model Ticket {
+  id            Int        @id @default(autoincrement())
+  entryTime     DateTime   @default(now())
+  exitTime      DateTime?
+  totalAmount   Float?
+  isPaid        Boolean    @default(false)
+  usedDailyFree Boolean    @default(false)
+  carId         Int
+  parkingLotId  Int
+  car           Car        @relation(fields: [carId], references: [id])
+  parkingLot    ParkingLot @relation(fields: [parkingLotId], references: [id])
+
+  @@map("tickets")
 }
 
 model Subscription {

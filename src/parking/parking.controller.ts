@@ -46,6 +46,7 @@ export class ParkingController {
       exitTime: result.exitTime,
       totalAmount: result.totalAmount ?? 0,
       isPaid: result.isPaid,
+      usedDailyFree: result.usedDailyFree,
       parkingLotId: result.parkingLotId,
       car: {
         id: result.car.id,
