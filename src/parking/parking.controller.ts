@@ -8,9 +8,9 @@ import {
   Post,
 } from '@nestjs/common';
 import { Ticket } from '@prisma/client';
-import { CreateEntryDto } from './dto/parking-entry.dto';
+import { EntryParkingDto } from './dto/parking-entry.dto';
 import { ParkingExitResponse } from './dto/parking-exit-response.dto';
-import { CreateExitDto } from './dto/parking-exit.dto';
+import { ExitParkingDto } from './dto/parking-exit.dto';
 import { ParkingService } from './parking.service';
 
 @Controller('parking')
@@ -28,12 +28,12 @@ export class ParkingController {
   }
 
   @Post('entry')
-  createEntry(@Body() data: CreateEntryDto): Promise<Ticket> {
+  createEntry(@Body() data: EntryParkingDto): Promise<Ticket> {
     return this.parkingService.entry(data.parkingLotId, data.plateNumber);
   }
 
   @Post('exit')
-  async createExit(@Body() data: CreateExitDto): Promise<ParkingExitResponse> {
+  async createExit(@Body() data: ExitParkingDto): Promise<ParkingExitResponse> {
     const result = await this.parkingService.exit(data.plateNumber);
 
     if (!result.exitTime) {

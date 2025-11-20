@@ -84,6 +84,7 @@ model Ticket {
   exitTime      DateTime?
   totalAmount   Float?
   isPaid        Boolean    @default(false)
+  paidAt        DateTime?
   usedDailyFree Boolean    @default(false)
   carId         Int
   parkingLotId  Int

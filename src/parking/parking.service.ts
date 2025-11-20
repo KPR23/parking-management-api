@@ -4,11 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, Ticket } from '@prisma/client';
+import { ParkingLotService } from 'src/parking-lot/parking-lot.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ParkingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly parkingLotService: ParkingLotService,
+  ) {}
 
   private updateParkingOccupancy(
     tx: Prisma.TransactionClient,
@@ -21,13 +25,23 @@ export class ParkingService {
     });
   }
 
-  async getTicket(id: number): Promise<Ticket> {
+  async getTicket(id: number) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
-      include: { car: true },
+      include: {
+        car: {
+          include: {
+            subscription: true,
+          },
+        },
+        parkingLot: true,
+      },
     });
 
-    if (!ticket) throw new NotFoundException('Ticket not found.');
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found.');
+    }
+
     return ticket;
   }
 
@@ -115,10 +129,9 @@ export class ParkingService {
     if (!activeTicket)
       throw new BadRequestException('No active ticket for this car.');
 
-    const parkingLot = await tx.parkingLot.findUnique({
-      where: { id: activeTicket.parkingLotId },
-    });
-    if (!parkingLot) throw new NotFoundException('Parking lot not found.');
+    const parkingLot = await this.parkingLotService.getById(
+      activeTicket.parkingLotId,
+    );
 
     const exitTime = new Date();
     const hours = Math.ceil(
