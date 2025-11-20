@@ -20,41 +20,45 @@ export class GateService {
   }
 
   async openGate(id: number): Promise<GateStatusDto> {
-    const gate = await this.prisma.gate.findUnique({ where: { id } });
-    if (!gate) {
-      throw new NotFoundException(`Gate with ID ${id} not found.`);
-    }
+    return this.prisma.$transaction(async (tx) => {
+      const gate = await tx.gate.findUnique({ where: { id } });
+      if (!gate) {
+        throw new NotFoundException(`Gate with ID ${id} not found.`);
+      }
 
-    const updated = await this.prisma.gate.update({
-      where: { id },
-      data: { status: GateStatus.OPEN },
+      const updated = await tx.gate.update({
+        where: { id },
+        data: { status: GateStatus.OPEN },
+      });
+
+      return {
+        id: updated.id,
+        parkingLotId: updated.parkingLotId,
+        type: updated.type,
+        status: updated.status,
+      };
     });
-
-    return {
-      id: updated.id,
-      parkingLotId: updated.parkingLotId,
-      type: updated.type,
-      status: updated.status,
-    };
   }
 
   async closeGate(id: number): Promise<GateStatusDto> {
-    const gate = await this.prisma.gate.findUnique({ where: { id } });
+    return this.prisma.$transaction(async (tx) => {
+      const gate = await tx.gate.findUnique({ where: { id } });
 
-    if (!gate) {
-      throw new NotFoundException(`Gate with ID ${id} not found.`);
-    }
+      if (!gate) {
+        throw new NotFoundException(`Gate with ID ${id} not found.`);
+      }
 
-    const updated = await this.prisma.gate.update({
-      where: { id },
-      data: { status: GateStatus.CLOSED },
+      const updated = await tx.gate.update({
+        where: { id },
+        data: { status: GateStatus.CLOSED },
+      });
+
+      return {
+        id: updated.id,
+        parkingLotId: updated.parkingLotId,
+        type: updated.type,
+        status: updated.status,
+      };
     });
-
-    return {
-      id: updated.id,
-      parkingLotId: updated.parkingLotId,
-      type: updated.type,
-      status: updated.status,
-    };
   }
 }
