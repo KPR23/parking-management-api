@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CameraEventType } from '@prisma/client';
+import { CameraEventType, Prisma } from '@prisma/client';
 import { GateService } from 'src/gate/gate.service';
 import { ParkingService } from 'src/parking/parking.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -17,88 +17,110 @@ export class CameraService {
     private readonly gateService: GateService,
   ) {}
 
-  async handleEntry(plateNumber: string, gateId: number) {
-    const gate = await this.prisma.gate.findUnique({ where: { id: gateId } });
+  private async getAndValidateGate(
+    tx: Prisma.TransactionClient,
+    gateId: number,
+    expectedType: 'ENTRY' | 'EXIT',
+  ) {
+    const gate = await tx.gate.findUnique({ where: { id: gateId } });
+    if (!gate) {
+      throw new NotFoundException(`Gate with ID ${gateId} not found.`);
+    }
 
-    if (!gate) throw new NotFoundException(`Gate with ID ${gateId} not found.`);
+    if (gate.type !== expectedType) {
+      throw new BadRequestException(
+        `This is a ${gate.type.toLowerCase()} gate.`,
+      );
+    }
 
-    if (gate.type === 'EXIT')
-      throw new BadRequestException('This is an exit gate.');
+    return gate;
+  }
 
-    await this.prisma.cameraEvent.create({
+  private async createCameraEvent(
+    tx: Prisma.TransactionClient,
+    plateNumber: string,
+    gateId: number,
+    type: CameraEventType,
+  ) {
+    return tx.cameraEvent.create({
       data: {
         plateNumber,
         gateId,
-        type: CameraEventType.ENTRY_DETECTED,
+        type,
       },
     });
+  }
 
-    try {
-      const ticket = await this.parkingService.entry(
-        gate.parkingLotId,
+  async handleEntry(
+    plateNumber: string,
+    gateId: number,
+  ): Promise<CameraEntryResponseDto> {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const gate = await this.getAndValidateGate(tx, gateId, 'ENTRY');
+
+      await this.createCameraEvent(
+        tx,
         plateNumber,
+        gateId,
+        CameraEventType.ENTRY_DETECTED,
       );
 
-      await this.gateService.openGate(gateId);
+      try {
+        const ticket = await this.parkingService.entryWithTx(
+          tx,
+          gate.parkingLotId,
+          plateNumber,
+        );
 
-      return {
-        action: 'ENTRY_ALLOWED',
-        ticketId: ticket.id,
-        parkingLotId: gate.parkingLotId,
-      } satisfies CameraEntryResponseDto;
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw new BadRequestException({
-          action: 'ENTRY_BLOCKED',
-          reason: error.message,
-        });
+        await this.gateService.openGateWithTx(tx, gateId);
+
+        return {
+          action: 'ENTRY_ALLOWED',
+          ticketId: ticket.id,
+          parkingLotId: gate.parkingLotId,
+        } satisfies CameraEntryResponseDto;
+      } catch (error) {
+        if (error instanceof BadRequestException) {
+          throw new BadRequestException({
+            action: 'ENTRY_BLOCKED',
+            reason: error.message,
+          });
+        }
+        throw error;
       }
-      throw error;
-    }
+    });
   }
 
   async handleExit(plateNumber: string, gateId: number) {
-    const gate = await this.prisma.gate.findUnique({ where: { id: gateId } });
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await this.getAndValidateGate(tx, gateId, 'EXIT');
 
-    if (!gate) throw new NotFoundException(`Gate with ID ${gateId} not found.`);
-
-    if (gate.type === 'ENTRY')
-      throw new BadRequestException('This is an entry gate.');
-
-    await this.prisma.cameraEvent.create({
-      data: {
+      await this.createCameraEvent(
+        tx,
         plateNumber,
         gateId,
-        type: CameraEventType.EXIT_DETECTED,
-      },
-    });
+        CameraEventType.EXIT_DETECTED,
+      );
 
-    try {
-      const ticket = await this.parkingService.exit(plateNumber);
+      try {
+        const ticket = await this.parkingService.exitWithTx(tx, plateNumber);
 
-      if (!ticket.isPaid && ticket.totalAmount && ticket.totalAmount > 0) {
+        await this.gateService.openGateWithTx(tx, gateId);
+
         return {
-          action: 'EXIT_BLOCKED',
-          reason: 'Payment required',
-          totalAmount: ticket.totalAmount,
+          action: 'EXIT_ALLOWED',
+          ticketId: ticket.id,
+          totalAmount: ticket.totalAmount ?? 0,
         };
+      } catch (error) {
+        if (error instanceof BadRequestException) {
+          throw new BadRequestException({
+            action: 'EXIT_BLOCKED',
+            reason: error.message,
+          });
+        }
+        throw error;
       }
-
-      await this.gateService.openGate(gateId);
-
-      return {
-        action: 'EXIT_ALLOWED',
-        ticketId: ticket.id,
-        totalAmount: ticket.totalAmount ?? 0,
-      };
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw new BadRequestException({
-          action: 'EXIT_BLOCKED',
-          reason: error.message,
-        });
-      }
-      throw error;
-    }
+    });
   }
 }
