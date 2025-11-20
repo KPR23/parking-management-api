@@ -1,7 +1,11 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
 
-export class CreateExitDto {
+export class ExitParkingDto {
   @IsString()
   @IsNotEmpty()
-  plateNumber: string;
+  @Matches(/^[A-Z0-9]+$/, {
+    message: 'Plate number must contain only uppercase letters and numbers',
+  })
+  @MaxLength(20)
+  readonly plateNumber: string;
 }

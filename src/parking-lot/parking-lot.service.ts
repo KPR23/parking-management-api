@@ -46,8 +46,8 @@ export class ParkingLotService {
         name: data.name,
         location: data.location,
         totalSpots: data.totalSpots,
-        pricePerHour: data.pricePerHour ?? 5,
-        freeHoursPerDay: data.freeHoursPerDay ?? 2,
+        pricePerHour: data.pricePerHour,
+        freeHoursPerDay: data.freeHoursPerDay,
         occupiedSpots: 0,
       },
     });

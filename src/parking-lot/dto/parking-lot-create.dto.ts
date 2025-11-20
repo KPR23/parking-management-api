@@ -1,31 +1,36 @@
 import {
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
+  Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 
 export class CreateParkingLotDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  @MaxLength(100)
+  readonly name: string;
 
   @IsString()
   @IsOptional()
-  location?: string;
+  @MaxLength(150)
+  readonly location?: string;
 
   @IsInt()
   @IsPositive()
   @IsNotEmpty()
-  totalSpots: number;
+  readonly totalSpots: number;
 
-  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
-  pricePerHour?: number;
+  readonly pricePerHour?: number;
 
-  @IsOptional()
   @Min(0)
-  freeHoursPerDay?: number;
+  @Max(24)
+  readonly freeHoursPerDay?: number;
 }

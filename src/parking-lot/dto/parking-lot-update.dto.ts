@@ -1,12 +1,23 @@
-import { IsInt, IsOptional, IsPositive, IsString, Min } from 'class-validator';
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class UpdateParkingLotDto {
   @IsString()
   @IsOptional()
+  @MaxLength(100)
   name?: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(150)
   location?: string;
 
   @IsInt()
@@ -15,10 +26,12 @@ export class UpdateParkingLotDto {
   totalSpots?: number;
 
   @Min(0)
+  @IsNumber({ maxDecimalPlaces: 2 })
   @IsOptional()
   pricePerHour?: number;
 
   @Min(0)
+  @Max(24)
   @IsOptional()
   freeHoursPerDay?: number;
 }
