@@ -10,6 +10,8 @@ import { ParkingService } from './parking/parking.service';
 import { PrismaService } from './prisma/prisma.service';
 import { SubscriptionController } from './subscription/subscription.controller';
 import { SubscriptionService } from './subscription/subscription.service';
+import { PaymentsController } from './payments/payments.controller';
+import { PaymentsService } from './payments/payments.service';
 
 @Module({
   imports: [],
@@ -19,6 +21,7 @@ import { SubscriptionService } from './subscription/subscription.service';
     SubscriptionController,
     CameraController,
     GateController,
+    PaymentsController,
   ],
   providers: [
     ParkingService,
@@ -27,6 +30,7 @@ import { SubscriptionService } from './subscription/subscription.service';
     SubscriptionService,
     GateService,
     CameraService,
+    PaymentsService,
   ],
 })
 export class AppModule {}
