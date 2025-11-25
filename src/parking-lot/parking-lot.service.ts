@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { GateType, ParkingLot } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
-import { async } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateParkingLotDto } from './dto/parking-lot-create.dto';
 import { UpdateParkingLotDto } from './dto/parking-lot-update.dto';
