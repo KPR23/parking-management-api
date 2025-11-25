@@ -40,19 +40,6 @@ export class ParkingController {
       throw new InternalServerErrorException('Exit time not set');
     }
 
-    return {
-      id: result.id,
-      entryTime: result.entryTime,
-      exitTime: result.exitTime,
-      totalAmount: result.totalAmount ?? 0,
-      isPaid: result.isPaid,
-      usedDailyFree: result.usedDailyFree,
-      parkingLotId: result.parkingLotId,
-      car: {
-        id: result.car.id,
-        plateNumber: result.car.plateNumber,
-        subscription: result.car.subscription,
-      },
-    };
+    return result;
   }
 }

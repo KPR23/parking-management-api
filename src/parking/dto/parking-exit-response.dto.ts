@@ -1,8 +1,10 @@
+import { QuoteReason } from 'src/payments/dto/payments-pay.dto';
+
 export class ParkingExitResponse {
   id: number;
   entryTime: Date;
-  exitTime: Date;
-  totalAmount: number;
+  exitTime: Date | null;
+  totalAmount: number | null;
   isPaid: boolean;
   usedDailyFree: boolean;
   parkingLotId: number;
@@ -17,4 +19,15 @@ export class ParkingExitResponse {
       endDate: Date;
     } | null;
   };
+  parkingLot: {
+    id: number;
+    name: string;
+    location: string | null;
+    totalSpots: number;
+    occupiedSpots: number;
+    pricePerHour: number | null;
+    freeHoursPerDay: number | null;
+  };
+  reason: QuoteReason;
+  calculatedAt: Date;
 }

@@ -10,7 +10,7 @@ import { QuoteReason } from 'src/payments/dto/payments-quote.dto';
 import { PaymentsService } from 'src/payments/payments.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TicketsService } from 'src/tickets/tickets.service';
-import { ParkingExitResult } from './dto/parking-exit-result.dto';
+import { ParkingExitResponse } from './dto/parking-exit-response.dto';
 
 @Injectable()
 export class ParkingService {
@@ -89,7 +89,7 @@ export class ParkingService {
   async exitWithTx(
     tx: Prisma.TransactionClient,
     plateNumber: string,
-  ): Promise<ParkingExitResult> {
+  ): Promise<ParkingExitResponse> {
     const car = await this.carService.findWithActiveTicket(plateNumber, tx);
 
     const activeTicket = car.tickets[0];
@@ -126,7 +126,7 @@ export class ParkingService {
     );
   }
 
-  async exit(plateNumber: string): Promise<ParkingExitResult> {
+  async exit(plateNumber: string): Promise<ParkingExitResponse> {
     return this.prisma.$transaction((tx) => this.exitWithTx(tx, plateNumber));
   }
 }
