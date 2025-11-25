@@ -3,7 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ParkingLot } from '@prisma/client';
+import { GateType, ParkingLot } from '@prisma/client';
+import { randomUUID } from 'node:crypto';
+import { async } from 'rxjs';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateParkingLotDto } from './dto/parking-lot-create.dto';
 import { UpdateParkingLotDto } from './dto/parking-lot-update.dto';
@@ -13,7 +15,11 @@ export class ParkingLotService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAll(): Promise<ParkingLot[]> {
-    const parkingLots = await this.prisma.parkingLot.findMany();
+    const parkingLots = await this.prisma.parkingLot.findMany({
+      include: {
+        gates: true,
+      },
+    });
 
     if (!parkingLots) throw new NotFoundException('No parking lots found.');
 
@@ -23,6 +29,9 @@ export class ParkingLotService {
   async getById(id: number): Promise<ParkingLot> {
     const parkingLot = await this.prisma.parkingLot.findUnique({
       where: { id },
+      include: {
+        gates: true,
+      },
     });
 
     if (!parkingLot) throw new NotFoundException('Parking lot not found.');
@@ -31,25 +40,45 @@ export class ParkingLotService {
   }
 
   async create(data: CreateParkingLotDto): Promise<ParkingLot> {
-    const existingLot = await this.prisma.parkingLot.findFirst({
-      where: { name: data.name },
-    });
+    return this.prisma.$transaction(async (tx) => {
+      const existingLot = await tx.parkingLot.findFirst({
+        where: { name: data.name },
+      });
 
-    if (existingLot) {
-      throw new BadRequestException(
-        'Parking lot with this name already exists.',
-      );
-    }
+      if (existingLot) {
+        throw new BadRequestException(
+          'Parking lot with this name already exists.',
+        );
+      }
 
-    return this.prisma.parkingLot.create({
-      data: {
-        name: data.name,
-        location: data.location,
-        totalSpots: data.totalSpots,
-        pricePerHour: data.pricePerHour,
-        freeHoursPerDay: data.freeHoursPerDay,
-        occupiedSpots: 0,
-      },
+      const lot = await tx.parkingLot.create({
+        data: {
+          name: data.name,
+          location: data.location,
+          totalSpots: data.totalSpots,
+          pricePerHour: data.pricePerHour,
+          freeHoursPerDay: data.freeHoursPerDay,
+          occupiedSpots: 0,
+        },
+      });
+
+      await tx.gate.create({
+        data: {
+          deviceId: randomUUID(),
+          type: GateType.ENTRY,
+          parkingLotId: lot.id,
+        },
+      });
+
+      await tx.gate.create({
+        data: {
+          deviceId: randomUUID(),
+          type: GateType.EXIT,
+          parkingLotId: lot.id,
+        },
+      });
+
+      return lot;
     });
   }
 

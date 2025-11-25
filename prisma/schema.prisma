@@ -42,6 +42,7 @@ enum GateStatus {
 
 model Gate {
   id           Int           @id @default(autoincrement())
+  deviceId     String
   parkingLot   ParkingLot    @relation(fields: [parkingLotId], references: [id])
   parkingLotId Int
   type         GateType
