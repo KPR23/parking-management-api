@@ -6,7 +6,6 @@ import {
 import { Prisma, Ticket } from '@prisma/client';
 import { CarService } from 'src/cars/cars.service';
 import { ParkingLotService } from 'src/parking-lot/parking-lot.service';
-import { QuoteReason } from 'src/payments/dto/payments-quote.dto';
 import { PaymentsService } from 'src/payments/payments.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TicketsService } from 'src/tickets/tickets.service';
