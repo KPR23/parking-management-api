@@ -46,20 +46,20 @@ async function main() {
 
   // 3. Create Cars
   const car1 = await prisma.car.upsert({
-    where: { plateNumber: 'WA 12345' },
+    where: { plateNumber: 'WA12345' },
     update: {},
     create: {
-      plateNumber: 'WA 12345',
+      plateNumber: 'WA12345',
     },
   });
   console.log({ car1 });
 
   // 4. Create Subscriber Car
   const subscriberCar = await prisma.car.upsert({
-    where: { plateNumber: 'KR 54321' },
+    where: { plateNumber: 'KR54321' },
     update: {},
     create: {
-      plateNumber: 'KR 54321',
+      plateNumber: 'KR54321',
       subscription: {
         create: {
           type: 'monthly',
