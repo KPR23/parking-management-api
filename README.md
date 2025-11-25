@@ -35,7 +35,7 @@ A robust NestJS-based backend application for managing parking lots, including f
 
     ```bash
     git clone https://github.com/KPR23/parking-management-api
-    cd nest-parking-api
+    cd parking-management-api
     ```
 
 2.  Install dependencies:
