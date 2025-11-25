@@ -1,6 +1,14 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { Car } from '@prisma/client';
 import { CarService } from './cars.service';
+import { CreateCarDto } from './dto/cars-create.dto';
 
 @Controller('cars')
 export class CarController {
@@ -14,5 +22,10 @@ export class CarController {
   @Get('plate/:plateNumber')
   getCarByPlateNumber(@Param('plateNumber') plateNumber: string): Promise<Car> {
     return this.carService.findByPlate(plateNumber);
+  }
+
+  @Post()
+  createCar(@Body() { plateNumber }: CreateCarDto): Promise<Car> {
+    return this.carService.findOrCreate(plateNumber);
   }
 }

@@ -51,16 +51,10 @@ export class CarService {
   ): Promise<Car> {
     const client = tx || this.prisma;
 
-    let car = await client.car.findUnique({
+    return client.car.upsert({
       where: { plateNumber },
+      update: {},
+      create: { plateNumber },
     });
-
-    if (!car) {
-      car = await client.car.create({
-        data: { plateNumber },
-      });
-    }
-
-    return car;
   }
 }
