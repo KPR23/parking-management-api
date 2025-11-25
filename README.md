@@ -1,98 +1,108 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Parking Management API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A robust NestJS-based backend application for managing parking lots, including features for cameras, gates, payments, and subscriptions.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Features
 
-## Description
+- **Parking Lot Management**: Manage parking spots, pricing, and locations.
+- **Gate Control**: Simulate entry and exit gates with device integration.
+- **Camera Events**: Handle license plate recognition events (ALPR).
+- **Ticket System**: Issue and track parking tickets.
+- **Payments**: Process payments for parking sessions.
+- **Subscriptions**: Manage monthly, yearly, and lifetime parking subscriptions.
+- **Cars**: Register and manage vehicles.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🛠️ Tech Stack
 
-## Project setup
+- **Framework**: [NestJS](https://nestjs.com/)
+- **Database**: PostgreSQL
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Documentation**: Swagger (OpenAPI)
+- **Containerization**: Docker & Docker Compose
+- **Package Manager**: pnpm
 
-```bash
-$ pnpm install
-```
+## 📦 Setup
 
-## Compile and run the project
+### Prerequisites
 
-```bash
-# development
-$ pnpm run start
+- Node.js (v20+)
+- Docker & Docker Compose
+- pnpm (`npm install -g pnpm`)
 
-# watch mode
-$ pnpm run start:dev
+### Installation
 
-# production mode
-$ pnpm run start:prod
-```
+1.  Clone the repository:
 
-## Run tests
+    ```bash
+    git clone https://github.com/KPR23/parking-management-api
+    cd nest-parking-api
+    ```
 
-```bash
-# unit tests
-$ pnpm run test
+2.  Install dependencies:
 
-# e2e tests
-$ pnpm run test:e2e
+    ```bash
+    make install
+    # or
+    pnpm install
+    ```
 
-# test coverage
-$ pnpm run test:cov
-```
+3.  Set up environment variables:
+    Copy `.env.example` to `.env` (if available) or ensure the following variables are set:
+    ```env
+    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/nest_db?schema=public"
+    ```
 
-## Deployment
+### Running the Application
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+#### Using Docker (Recommended)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Start the database and application using Docker Compose:
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+make up
+# or
+docker-compose up -d
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+#### Local Development
 
-## Resources
+1.  Start the database (if not using Docker for the app):
 
-Check out a few resources that may come in handy when working with NestJS:
+    ```bash
+    docker-compose up -d db
+    ```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+2.  Run database migrations:
 
-## Support
+    ```bash
+    pnpm prisma migrate dev
+    ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+3.  Start the application:
+    ```bash
+    pnpm run start:dev
+    ```
 
-## Stay in touch
+## 📚 API Documentation
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Once the application is running, you can access the Swagger API documentation at:
 
-## License
+[http://localhost:8000/api](http://localhost:8000/api)
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 🛠️ Commands (Makefile)
+
+This project includes a `Makefile` for common tasks:
+
+| Command          | Description                     |
+| ---------------- | ------------------------------- |
+| `make install`   | Install dependencies            |
+| `make up`        | Start services (Docker)         |
+| `make down`      | Stop services                   |
+| `make logs`      | View application logs           |
+| `make db-studio` | Open Prisma Studio to view data |
+| `make lint`      | Run linter                      |
+| `make build`     | Build the project               |
+
+## 🧪 Testing
+
+# _Note: Tests are currently being implemented._

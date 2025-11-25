@@ -1,8 +1,8 @@
 {
   "name": "nest-parking-api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Parking API",
+  "author": "Kacper Zabludowski",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
