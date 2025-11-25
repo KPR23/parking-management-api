@@ -4,14 +4,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, Ticket } from '@prisma/client';
+import { CarService } from 'src/cars/cars.service';
 import { ParkingLotService } from 'src/parking-lot/parking-lot.service';
+import { QuoteReason } from 'src/payments/dto/payments-quote.dto';
+import { PaymentsService } from 'src/payments/payments.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TicketsService } from 'src/tickets/tickets.service';
 
 @Injectable()
 export class ParkingService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly parkingLotService: ParkingLotService,
+    private readonly carService: CarService,
+    private readonly ticketsService: TicketsService,
+    private readonly paymentsService: PaymentsService,
   ) {}
 
   private updateParkingOccupancy(
@@ -26,40 +33,11 @@ export class ParkingService {
   }
 
   async getTicket(id: number) {
-    const ticket = await this.prisma.ticket.findUnique({
-      where: { id },
-      include: {
-        car: {
-          include: {
-            subscription: true,
-          },
-        },
-        parkingLot: true,
-      },
-    });
-
-    if (!ticket) {
-      throw new NotFoundException('Ticket not found.');
-    }
-
-    return ticket;
+    return this.ticketsService.getTicket(id);
   }
 
   async getActiveTicketByPlate(plateNumber: string): Promise<Ticket> {
-    const ticket = await this.prisma.ticket.findFirst({
-      where: {
-        car: { plateNumber },
-        exitTime: null,
-      },
-      include: { car: true },
-    });
-
-    if (!ticket)
-      throw new NotFoundException(
-        `No active ticket found for car with plate number ${plateNumber}`,
-      );
-
-    return ticket;
+    return this.ticketsService.getActiveTicketByPlate(plateNumber);
   }
 
   async entryWithTx(
@@ -73,22 +51,21 @@ export class ParkingService {
 
     if (!parkingLot) throw new NotFoundException('Parking lot not found.');
 
-    const occupiedSpotsCount = await tx.ticket.count({
-      where: { parkingLotId, exitTime: null },
-    });
+    const occupiedSpotsCount = await this.ticketsService.countOccupiedSpots(
+      tx,
+      parkingLotId,
+    );
 
     if (occupiedSpotsCount >= parkingLot.totalSpots) {
       throw new BadRequestException('Parking lot is full.');
     }
 
-    let car = await tx.car.findUnique({ where: { plateNumber } });
-    if (!car) {
-      car = await tx.car.create({ data: { plateNumber } });
-    }
+    const car = await this.carService.findOrCreate(plateNumber, tx);
 
-    const activeTicket = await tx.ticket.findFirst({
-      where: { carId: car.id, exitTime: null },
-    });
+    const activeTicket = await this.ticketsService.findActiveByCarId(
+      tx,
+      car.id,
+    );
 
     if (activeTicket) {
       throw new BadRequestException({
@@ -97,13 +74,10 @@ export class ParkingService {
       });
     }
 
-    const ticket = await tx.ticket.create({
-      data: {
-        carId: car.id,
-        parkingLotId,
-        entryTime: new Date(),
-      },
-      include: { car: true },
+    const ticket = await this.ticketsService.create(tx, {
+      carId: car.id,
+      parkingLotId,
+      entryTime: new Date(),
     });
 
     await this.updateParkingOccupancy(tx, parkingLotId, true);
@@ -111,19 +85,15 @@ export class ParkingService {
     return ticket;
   }
 
-  async exitWithTx(tx: Prisma.TransactionClient, plateNumber: string) {
-    const car = await tx.car.findUnique({
-      where: { plateNumber },
-      include: {
-        tickets: {
-          where: { exitTime: null },
-          select: { id: true, entryTime: true, parkingLotId: true },
-        },
-        subscription: true,
-      },
-    });
-
-    if (!car) throw new NotFoundException('Car not found.');
+  async exitWithTx(
+    tx: Prisma.TransactionClient,
+    plateNumber: string,
+  ): Promise<
+    Prisma.TicketGetPayload<{
+      include: { car: { include: { subscription: true } }; parkingLot: true };
+    }> & { reason: QuoteReason; calculatedAt: Date }
+  > {
+    const car = await this.carService.findWithActiveTicket(plateNumber, tx);
 
     const activeTicket = car.tickets[0];
     if (!activeTicket)
@@ -133,90 +103,22 @@ export class ParkingService {
       activeTicket.parkingLotId,
     );
 
-    const exitTime = new Date();
-    const hours = Math.ceil(
-      (exitTime.getTime() - activeTicket.entryTime.getTime()) / 3_600_000,
-    );
+    const paidTicket = await this.paymentsService.pay(activeTicket.id, tx);
 
-    // Subscription = free exit
-    if (car.subscription && car.subscription.endDate > new Date()) {
-      const updated = await tx.ticket.update({
-        where: { id: activeTicket.id },
-        data: { exitTime, totalAmount: 0, isPaid: true },
-      });
-
-      const full = await tx.ticket.findUniqueOrThrow({
-        where: { id: updated.id },
-        include: {
-          car: {
-            include: { subscription: true },
-          },
-        },
-      });
-
-      await this.updateParkingOccupancy(tx, parkingLot.id, false);
-      return full;
-    }
-
-    // No subscription → calculate fee
-    const pricePerHour = parkingLot.pricePerHour ?? 5;
-    const freeHoursPerDay = parkingLot.freeHoursPerDay ?? 2;
-
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const alreadyUsedFree = await tx.ticket.findFirst({
-      where: {
-        carId: car.id,
-        entryTime: { gte: startOfToday },
-        usedDailyFree: true,
-      },
-    });
-
-    let totalAmount = 0;
-    let usedDailyFree = false;
-
-    if (!alreadyUsedFree) {
-      if (hours > freeHoursPerDay) {
-        const billableHours = Math.ceil(hours - freeHoursPerDay);
-        totalAmount = billableHours * pricePerHour;
-      } else {
-        totalAmount = 0;
-      }
-      usedDailyFree = true;
-    } else {
-      totalAmount = Math.ceil(hours) * pricePerHour;
-      usedDailyFree = false;
-    }
-
-    if (totalAmount > 0) {
-      throw new BadRequestException({
-        message: 'Payment required before exit.',
-        totalAmount,
-      });
-    }
-
-    const updated = await tx.ticket.update({
+    const exitedTicket = await tx.ticket.update({
       where: { id: activeTicket.id },
-      data: {
-        exitTime,
-        totalAmount,
-        isPaid: totalAmount === 0,
-        usedDailyFree,
-      },
-    });
-
-    const full = await tx.ticket.findUniqueOrThrow({
-      where: { id: updated.id },
+      data: { exitTime: new Date() },
       include: {
-        car: {
-          include: { subscription: true },
-        },
+        car: { include: { subscription: true } },
+        parkingLot: true,
       },
     });
 
-    await this.updateParkingOccupancy(tx, parkingLot.id, false);
-    return full;
+    return {
+      ...exitedTicket,
+      reason: paidTicket.reason,
+      calculatedAt: paidTicket.calculatedAt,
+    };
   }
 
   async entry(parkingLotId: number, plateNumber: string) {
@@ -225,7 +127,11 @@ export class ParkingService {
     );
   }
 
-  async exit(plateNumber: string) {
+  async exit(plateNumber: string): Promise<
+    Prisma.TicketGetPayload<{
+      include: { car: { include: { subscription: true } }; parkingLot: true };
+    }> & { reason: QuoteReason; calculatedAt: Date }
+  > {
     return this.prisma.$transaction((tx) => this.exitWithTx(tx, plateNumber));
   }
 }

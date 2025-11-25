@@ -15,9 +15,16 @@ export class PaymentsController {
   }
 
   @Post('tickets/:ticketId/pay')
-  processPayment(
+  async processPayment(
     @Param('ticketId', ParseIntPipe) ticketId: number,
   ): Promise<TicketPayDto> {
-    return this.paymentsService.pay(ticketId);
+    const result = await this.paymentsService.pay(ticketId);
+    return {
+      ticketId: result.id,
+      totalAmount: result.totalAmount ?? 0,
+      usedDailyFree: result.usedDailyFree,
+      reason: result.reason,
+      calculatedAt: result.calculatedAt,
+    };
   }
 }

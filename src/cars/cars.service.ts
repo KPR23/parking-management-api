@@ -52,9 +52,45 @@ export class CarService {
     const client = tx || this.prisma;
 
     return client.car.upsert({
-      where: { plateNumber },
+      where: {
+        plateNumber,
+      },
+      include: {
+        subscription: true,
+      },
       update: {},
       create: { plateNumber },
     });
+  }
+
+  async findWithActiveTicket(
+    plateNumber: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<
+    Car & {
+      tickets: { id: number; entryTime: Date; parkingLotId: number }[];
+      subscription: any;
+    }
+  > {
+    const client = tx || this.prisma;
+
+    const car = await client.car.findUnique({
+      where: { plateNumber },
+      include: {
+        tickets: {
+          where: { exitTime: null },
+          select: { id: true, entryTime: true, parkingLotId: true },
+        },
+        subscription: true,
+      },
+    });
+
+    if (!car) {
+      throw new NotFoundException(
+        `Car with plate number ${plateNumber} not found.`,
+      );
+    }
+
+    return car;
   }
 }

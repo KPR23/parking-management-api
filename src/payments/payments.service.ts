@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ParkingService } from 'src/parking/parking.service';
+import { Prisma, Ticket } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TicketsService } from 'src/tickets/tickets.service';
 import { TicketPayDto } from './dto/payments-pay.dto';
 import { QuoteReason, TicketQuoteDto } from './dto/payments-quote.dto';
 
@@ -8,11 +9,11 @@ import { QuoteReason, TicketQuoteDto } from './dto/payments-quote.dto';
 export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly parkingService: ParkingService,
+    private readonly ticketsService: TicketsService,
   ) {}
 
   async calculateExitPrice(ticketId: number): Promise<TicketQuoteDto> {
-    const ticket = await this.parkingService.getTicket(ticketId);
+    const ticket = await this.ticketsService.getTicket(ticketId);
 
     const now = new Date();
 
@@ -88,11 +89,25 @@ export class PaymentsService {
     };
   }
 
-  async pay(ticketId: number): Promise<TicketPayDto> {
+  async pay(
+    ticketId: number,
+    tx?: Prisma.TransactionClient,
+  ): Promise<
+    Prisma.TicketGetPayload<{
+      include: { car: { include: { subscription: true } }; parkingLot: true };
+    }> & { reason: QuoteReason; calculatedAt: Date }
+  > {
+    const client = tx || this.prisma;
     const quote = await this.calculateExitPrice(ticketId);
 
-    const currentTicket = await this.prisma.ticket.findUnique({
+    const currentTicket = await client.ticket.findUnique({
       where: { id: ticketId },
+      include: {
+        car: {
+          include: { subscription: true },
+        },
+        parkingLot: true,
+      },
     });
 
     if (currentTicket?.exitTime) {
@@ -104,15 +119,13 @@ export class PaymentsService {
       currentTicket.totalAmount === quote.totalAmount
     ) {
       return {
-        ticketId,
-        totalAmount: quote.totalAmount,
-        usedDailyFree: quote.usedDailyFree,
+        ...currentTicket,
         reason: quote.reason,
-        calculatedAt: currentTicket.paidAt || new Date(),
+        calculatedAt: quote.calculatedAt,
       };
     }
 
-    await this.prisma.ticket.update({
+    const updatedTicket = await client.ticket.update({
       where: { id: ticketId },
       data: {
         totalAmount: quote.totalAmount,
@@ -120,12 +133,16 @@ export class PaymentsService {
         usedDailyFree: quote.usedDailyFree,
         paidAt: new Date(),
       },
+      include: {
+        car: {
+          include: { subscription: true },
+        },
+        parkingLot: true,
+      },
     });
 
     return {
-      ticketId: ticketId,
-      totalAmount: quote.totalAmount ?? 0,
-      usedDailyFree: quote.usedDailyFree,
+      ...updatedTicket,
       reason: quote.reason,
       calculatedAt: quote.calculatedAt,
     };
