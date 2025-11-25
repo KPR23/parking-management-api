@@ -10,6 +10,7 @@ import { QuoteReason } from 'src/payments/dto/payments-quote.dto';
 import { PaymentsService } from 'src/payments/payments.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TicketsService } from 'src/tickets/tickets.service';
+import { ParkingExitResult } from './dto/parking-exit-result.dto';
 
 @Injectable()
 export class ParkingService {
@@ -88,11 +89,7 @@ export class ParkingService {
   async exitWithTx(
     tx: Prisma.TransactionClient,
     plateNumber: string,
-  ): Promise<
-    Prisma.TicketGetPayload<{
-      include: { car: { include: { subscription: true } }; parkingLot: true };
-    }> & { reason: QuoteReason; calculatedAt: Date }
-  > {
+  ): Promise<ParkingExitResult> {
     const car = await this.carService.findWithActiveTicket(plateNumber, tx);
 
     const activeTicket = car.tickets[0];
@@ -114,6 +111,8 @@ export class ParkingService {
       },
     });
 
+    await this.updateParkingOccupancy(tx, parkingLot.id, false);
+
     return {
       ...exitedTicket,
       reason: paidTicket.reason,
@@ -127,11 +126,7 @@ export class ParkingService {
     );
   }
 
-  async exit(plateNumber: string): Promise<
-    Prisma.TicketGetPayload<{
-      include: { car: { include: { subscription: true } }; parkingLot: true };
-    }> & { reason: QuoteReason; calculatedAt: Date }
-  > {
+  async exit(plateNumber: string): Promise<ParkingExitResult> {
     return this.prisma.$transaction((tx) => this.exitWithTx(tx, plateNumber));
   }
 }

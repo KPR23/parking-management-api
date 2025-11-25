@@ -7,6 +7,7 @@ import { CameraEventType, Prisma } from '@prisma/client';
 import { GateService } from 'src/gate/gate.service';
 import { ParkingService } from 'src/parking/parking.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CameraExitResponseDto } from './dto/camera-exit-response.dto';
 import { CameraEntryResponseDto } from './dto/camera-response.dto';
 
 @Injectable()
@@ -91,7 +92,10 @@ export class CameraService {
     });
   }
 
-  async handleExit(plateNumber: string, gateId: number) {
+  async handleExit(
+    plateNumber: string,
+    gateId: number,
+  ): Promise<CameraExitResponseDto> {
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await this.getAndValidateGate(tx, gateId, 'EXIT');
 

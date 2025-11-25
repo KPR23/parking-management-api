@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, Ticket } from '@prisma/client';
+import { ParkingExitResult } from 'src/parking/dto/parking-exit-result.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TicketsService } from 'src/tickets/tickets.service';
 import { TicketPayDto } from './dto/payments-pay.dto';
@@ -92,11 +93,7 @@ export class PaymentsService {
   async pay(
     ticketId: number,
     tx?: Prisma.TransactionClient,
-  ): Promise<
-    Prisma.TicketGetPayload<{
-      include: { car: { include: { subscription: true } }; parkingLot: true };
-    }> & { reason: QuoteReason; calculatedAt: Date }
-  > {
+  ): Promise<ParkingExitResult> {
     const client = tx || this.prisma;
     const quote = await this.calculateExitPrice(ticketId);
 
@@ -129,6 +126,7 @@ export class PaymentsService {
       where: { id: ticketId },
       data: {
         totalAmount: quote.totalAmount,
+        // Simulating automatic payment from registered card
         isPaid: true,
         usedDailyFree: quote.usedDailyFree,
         paidAt: new Date(),
