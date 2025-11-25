@@ -60,10 +60,10 @@ export class GateService {
   }
 
   async openGate(id: number): Promise<GateStatusDto> {
-    return this.prisma.$transaction((tx) => this.openGateWithTx(tx, id));
+    return await this.prisma.$transaction((tx) => this.openGateWithTx(tx, id));
   }
 
   async closeGate(id: number): Promise<GateStatusDto> {
-    return this.prisma.$transaction((tx) => this.closeGateWithTx(tx, id));
+    return await this.prisma.$transaction((tx) => this.closeGateWithTx(tx, id));
   }
 }

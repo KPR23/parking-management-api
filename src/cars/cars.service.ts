@@ -51,7 +51,7 @@ export class CarService {
   ): Promise<Car> {
     const client = tx || this.prisma;
 
-    return client.car.upsert({
+    return await client.car.upsert({
       where: {
         plateNumber,
       },

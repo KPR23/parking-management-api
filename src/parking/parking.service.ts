@@ -120,12 +120,14 @@ export class ParkingService {
   }
 
   async entry(parkingLotId: number, plateNumber: string) {
-    return this.prisma.$transaction((tx) =>
+    return await this.prisma.$transaction((tx) =>
       this.entryWithTx(tx, parkingLotId, plateNumber),
     );
   }
 
   async exit(plateNumber: string): Promise<ParkingExitResponse> {
-    return this.prisma.$transaction((tx) => this.exitWithTx(tx, plateNumber));
+    return await this.prisma.$transaction((tx) =>
+      this.exitWithTx(tx, plateNumber),
+    );
   }
 }

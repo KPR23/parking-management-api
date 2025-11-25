@@ -47,7 +47,7 @@ export class TicketsService {
     tx: Prisma.TransactionClient,
     parkingLotId: number,
   ): Promise<number> {
-    return tx.ticket.count({
+    return await tx.ticket.count({
       where: { parkingLotId, exitTime: null },
     });
   }
@@ -56,7 +56,7 @@ export class TicketsService {
     tx: Prisma.TransactionClient,
     carId: number,
   ): Promise<Ticket | null> {
-    return tx.ticket.findFirst({
+    return await tx.ticket.findFirst({
       where: { carId, exitTime: null },
     });
   }
@@ -65,7 +65,7 @@ export class TicketsService {
     tx: Prisma.TransactionClient,
     data: Prisma.TicketUncheckedCreateInput,
   ) {
-    return tx.ticket.create({
+    return await tx.ticket.create({
       data,
       include: { car: true },
     });
@@ -76,7 +76,7 @@ export class TicketsService {
     id: number,
     data: Prisma.TicketUpdateInput,
   ) {
-    return tx.ticket.update({
+    return await tx.ticket.update({
       where: { id },
       data,
     });
@@ -86,13 +86,13 @@ export class TicketsService {
     tx: Prisma.TransactionClient,
     args: Prisma.TicketFindUniqueOrThrowArgs,
   ) {
-    return tx.ticket.findUniqueOrThrow(args);
+    return await tx.ticket.findUniqueOrThrow(args);
   }
 
   async findFirst(
     tx: Prisma.TransactionClient,
     args: Prisma.TicketFindFirstArgs,
   ) {
-    return tx.ticket.findFirst(args);
+    return await tx.ticket.findFirst(args);
   }
 }

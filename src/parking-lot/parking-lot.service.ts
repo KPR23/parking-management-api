@@ -39,7 +39,7 @@ export class ParkingLotService {
   }
 
   async create(data: CreateParkingLotDto): Promise<ParkingLot> {
-    return this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       const existingLot = await tx.parkingLot.findFirst({
         where: { name: data.name },
       });
@@ -82,14 +82,14 @@ export class ParkingLotService {
   }
 
   async update(id: number, data: UpdateParkingLotDto): Promise<ParkingLot> {
-    return this.prisma.parkingLot.update({
+    return await this.prisma.parkingLot.update({
       where: { id },
       data,
     });
   }
 
   async delete(id: number): Promise<ParkingLot> {
-    return this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       await tx.ticket.deleteMany({ where: { parkingLotId: id } });
 
       return tx.parkingLot.delete({

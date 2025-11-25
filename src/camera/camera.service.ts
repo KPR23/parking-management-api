@@ -43,7 +43,7 @@ export class CameraService {
     gateId: number,
     type: CameraEventType,
   ) {
-    return tx.cameraEvent.create({
+    return await tx.cameraEvent.create({
       data: {
         plateNumber,
         gateId,
@@ -56,75 +56,79 @@ export class CameraService {
     plateNumber: string,
     gateId: number,
   ): Promise<CameraEntryResponseDto> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const gate = await this.getAndValidateGate(tx, gateId, 'ENTRY');
+    return await this.prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const gate = await this.getAndValidateGate(tx, gateId, 'ENTRY');
 
-      await this.createCameraEvent(
-        tx,
-        plateNumber,
-        gateId,
-        CameraEventType.ENTRY_DETECTED,
-      );
-
-      try {
-        const ticket = await this.parkingService.entryWithTx(
+        await this.createCameraEvent(
           tx,
-          gate.parkingLotId,
           plateNumber,
+          gateId,
+          CameraEventType.ENTRY_DETECTED,
         );
 
-        await this.gateService.openGateWithTx(tx, gateId);
+        try {
+          const ticket = await this.parkingService.entryWithTx(
+            tx,
+            gate.parkingLotId,
+            plateNumber,
+          );
 
-        return {
-          action: 'ENTRY_ALLOWED',
-          ticketId: ticket.id,
-          parkingLotId: gate.parkingLotId,
-        } satisfies CameraEntryResponseDto;
-      } catch (error) {
-        if (error instanceof BadRequestException) {
-          throw new BadRequestException({
-            action: 'ENTRY_BLOCKED',
-            reason: error.message,
-          });
+          await this.gateService.openGateWithTx(tx, gateId);
+
+          return {
+            action: 'ENTRY_ALLOWED',
+            ticketId: ticket.id,
+            parkingLotId: gate.parkingLotId,
+          } satisfies CameraEntryResponseDto;
+        } catch (error) {
+          if (error instanceof BadRequestException) {
+            throw new BadRequestException({
+              action: 'ENTRY_BLOCKED',
+              reason: error.message,
+            });
+          }
+          throw error;
         }
-        throw error;
-      }
-    });
+      },
+    );
   }
 
   async handleExit(
     plateNumber: string,
     gateId: number,
   ): Promise<CameraExitResponseDto> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      await this.getAndValidateGate(tx, gateId, 'EXIT');
+    return await this.prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        await this.getAndValidateGate(tx, gateId, 'EXIT');
 
-      await this.createCameraEvent(
-        tx,
-        plateNumber,
-        gateId,
-        CameraEventType.EXIT_DETECTED,
-      );
+        await this.createCameraEvent(
+          tx,
+          plateNumber,
+          gateId,
+          CameraEventType.EXIT_DETECTED,
+        );
 
-      try {
-        const ticket = await this.parkingService.exitWithTx(tx, plateNumber);
+        try {
+          const ticket = await this.parkingService.exitWithTx(tx, plateNumber);
 
-        await this.gateService.openGateWithTx(tx, gateId);
+          await this.gateService.openGateWithTx(tx, gateId);
 
-        return {
-          action: 'EXIT_ALLOWED',
-          ticketId: ticket.id,
-          totalAmount: ticket.totalAmount ?? 0,
-        };
-      } catch (error) {
-        if (error instanceof BadRequestException) {
-          throw new BadRequestException({
-            action: 'EXIT_BLOCKED',
-            reason: error.message,
-          });
+          return {
+            action: 'EXIT_ALLOWED',
+            ticketId: ticket.id,
+            totalAmount: ticket.totalAmount ?? 0,
+          };
+        } catch (error) {
+          if (error instanceof BadRequestException) {
+            throw new BadRequestException({
+              action: 'EXIT_BLOCKED',
+              reason: error.message,
+            });
+          }
+          throw error;
         }
-        throw error;
-      }
-    });
+      },
+    );
   }
 }

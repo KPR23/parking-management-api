@@ -45,7 +45,7 @@ export class SubscriptionService {
   }
 
   async create(data: CreateSubscriptionDto): Promise<Subscription> {
-    return this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       const car = await tx.car.findUnique({
         where: { id: data.carId },
         include: { subscription: true },
@@ -100,7 +100,7 @@ export class SubscriptionService {
   }
 
   async renew(id: number, data: RenewSubscriptionDto): Promise<Subscription> {
-    return this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       const subscription = await tx.subscription.findUnique({
         where: { id },
       });
@@ -136,7 +136,7 @@ export class SubscriptionService {
   }
 
   async update(id: number, data: UpdateSubscriptionDto): Promise<Subscription> {
-    return this.prisma.$transaction(async (tx) => {
+    return await this.prisma.$transaction(async (tx) => {
       const existing = await tx.subscription.findUnique({ where: { id } });
       if (!existing)
         throw new NotFoundException(`Subscription with ID ${id} not found.`);
@@ -155,7 +155,7 @@ export class SubscriptionService {
   }
 
   async delete(id: number): Promise<Subscription> {
-    return this.prisma.subscription.delete({
+    return await this.prisma.subscription.delete({
       where: { id },
     });
   }
