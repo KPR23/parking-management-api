@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma, Ticket } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { ParkingExitResponse } from 'src/parking/dto/parking-exit-response.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TicketsService } from 'src/tickets/tickets.service';
-import { TicketPayDto } from './dto/payments-pay.dto';
 import { QuoteReason, TicketQuoteDto } from './dto/payments-quote.dto';
 
 @Injectable()
