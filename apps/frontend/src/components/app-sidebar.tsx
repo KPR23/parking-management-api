@@ -7,12 +7,21 @@ import {
 	Settings,
 	SquareParking,
 	Ticket,
+	LogOut,
+	ChevronsUpDown,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/use-auth";
 
 const sidebarItems = [
 	{
@@ -40,6 +49,7 @@ const sidebarItems = [
 export function AppSidebar() {
 	const pathname = usePathname();
 	const [isMobileOpen, setIsMobileOpen] = useState(false);
+	const { user, logout } = useAuth();
 
 	return (
 		<>
@@ -104,19 +114,40 @@ export function AppSidebar() {
 				</nav>
 
 				<div className="p-4 border-t bg-card/50 backdrop-blur-sm">
-					<div className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer">
-						<div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-sm">
-							<span className="text-sm font-bold text-primary-foreground">
-								A
-							</span>
-						</div>
-						<div className="flex flex-col">
-							<span className="text-sm font-semibold">Admin User</span>
-							<span className="text-xs text-muted-foreground">
-								admin@example.com
-							</span>
-						</div>
-					</div>
+					{user && (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<div className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer">
+									<div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-sm">
+										<span className="text-sm font-bold text-primary-foreground">
+											{user.name?.[0] || user.email?.[0]?.toUpperCase() || "U"}
+										</span>
+									</div>
+									<div className="flex flex-col flex-1 min-w-0">
+										<span className="text-sm font-semibold truncate">
+											{user.name || "User"}
+										</span>
+										<span className="text-xs text-muted-foreground truncate">
+											{user.email}
+										</span>
+									</div>
+									<ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+								</div>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								align="end"
+								className="w-[--radix-dropdown-menu-trigger-width]"
+							>
+								<DropdownMenuItem
+									onClick={logout}
+									className="text-destructive focus:text-destructive cursor-pointer"
+								>
+									<LogOut className="mr-2 h-4 w-4" />
+									Log out
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
 				</div>
 			</aside>
 		</>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import QueryProvider from "@/providers/QueryProvider";
+import { AuthProvider } from "@/hooks/use-auth";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -22,7 +23,9 @@ export default function RootLayout({
 				className={`${inter.variable} ${outfit.variable} font-sans antialiased`}
 				suppressHydrationWarning
 			>
-				<QueryProvider>{children}</QueryProvider>
+				<QueryProvider>
+					<AuthProvider>{children}</AuthProvider>
+				</QueryProvider>
 			</body>
 		</html>
 	);

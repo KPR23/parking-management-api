@@ -8,6 +8,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { TicketsModule } from './tickets/tickets.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { TicketsModule } from './tickets/tickets.module';
     GateModule,
     PaymentsModule,
     CarsModule,
+    UsersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
