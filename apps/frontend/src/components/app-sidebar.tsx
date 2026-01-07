@@ -61,18 +61,23 @@ export function AppSidebar() {
 			{/* Sidebar Container */}
 			<aside
 				className={cn(
-					"fixed inset-y-0 left-0 z-40 w-64 transform bg-background border-r transition-transform duration-200 ease-in-out md:translate-x-0",
+					"fixed inset-y-0 left-0 z-40 w-64 transform border-r bg-card/80 backdrop-blur-xl transition-transform duration-200 ease-in-out md:translate-x-0 theme-transition",
 					isMobileOpen ? "translate-x-0" : "-translate-x-full"
 				)}
 			>
-				<div className="flex h-16 items-center px-6 border-b">
-					<Link href="/" className="flex items-center gap-2 font-bold text-xl">
-						<SquareParking className="h-6 w-6 text-primary" />
+				<div className="flex h-16 items-center px-6 border-b bg-card/50 backdrop-blur-sm">
+					<Link
+						href="/"
+						className="flex items-center gap-2 font-bold text-xl tracking-tight"
+					>
+						<div className="p-1.5 rounded-lg bg-primary text-primary-foreground">
+							<SquareParking className="h-5 w-5" />
+						</div>
 						<span>ParkManager</span>
 					</Link>
 				</div>
 
-				<nav className="flex-1 space-y-1 px-3 py-4">
+				<nav className="flex-1 space-y-1.5 px-3 py-6">
 					{sidebarItems.map((item) => {
 						const Icon = item.icon;
 						const isActive = pathname === item.href;
@@ -83,17 +88,17 @@ export function AppSidebar() {
 								href={item.href}
 								onClick={() => setIsMobileOpen(false)}
 								className={cn(
-									"group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+									"group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
 									isActive
-										? "bg-primary/10 text-primary"
-										: "text-muted-foreground hover:bg-muted hover:text-foreground"
+										? "bg-primary text-primary-foreground shadow-sm"
+										: "text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-1"
 								)}
 							>
 								<Icon
 									className={cn(
-										"mr-3 h-5 w-5 flex-shrink-0",
+										"mr-3 h-5 w-5 flex-shrink-0 transition-transform group-hover:scale-110",
 										isActive
-											? "text-primary"
+											? "text-primary-foreground"
 											: "text-muted-foreground group-hover:text-foreground"
 									)}
 								/>
@@ -103,13 +108,15 @@ export function AppSidebar() {
 					})}
 				</nav>
 
-				<div className="p-4 border-t">
-					<div className="flex items-center gap-3">
-						<div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-							<span className="text-sm font-bold text-primary">A</span>
+				<div className="p-4 border-t bg-card/50 backdrop-blur-sm">
+					<div className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer">
+						<div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-sm">
+							<span className="text-sm font-bold text-primary-foreground">
+								A
+							</span>
 						</div>
 						<div className="flex flex-col">
-							<span className="text-sm font-medium">Admin User</span>
+							<span className="text-sm font-semibold">Admin User</span>
 							<span className="text-xs text-muted-foreground">
 								admin@example.com
 							</span>

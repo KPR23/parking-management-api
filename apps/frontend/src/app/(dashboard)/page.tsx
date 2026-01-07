@@ -43,54 +43,80 @@ export default function DashboardPage() {
 				<h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
 			</div>
 
-			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<Card>
+			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+				<Card className="hover:scale-[1.02] transition-transform duration-200">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-						<DollarSign className="h-4 w-4 text-muted-foreground" />
+						<CardTitle className="text-sm font-medium text-muted-foreground">
+							Total Revenue
+						</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+							<DollarSign className="h-4 w-4 text-primary" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">
+						<div className="text-2xl font-bold tracking-tight">
 							{stats.totalRevenue.toLocaleString("pl-PL", {
 								style: "currency",
 								currency: "PLN",
 							})}
 						</div>
-						<p className="text-xs text-muted-foreground">Lifetime revenue</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							Lifetime revenue generated
+						</p>
 					</CardContent>
 				</Card>
-				<Card>
+				<Card className="hover:scale-[1.02] transition-transform duration-200">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">
+						<CardTitle className="text-sm font-medium text-muted-foreground">
 							Active Subscriptions
 						</CardTitle>
-						<Users className="h-4 w-4 text-muted-foreground" />
+						<div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
+							<Users className="h-4 w-4 text-blue-500" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">
+						<div className="text-2xl font-bold tracking-tight">
 							{stats.activeSubscriptions}
 						</div>
-						<p className="text-xs text-muted-foreground">Current subscribers</p>
+						<p className="text-xs text-muted-foreground mt-1">
+							Current active subscribers
+						</p>
 					</CardContent>
 				</Card>
-				<Card>
+				<Card className="hover:scale-[1.02] transition-transform duration-200">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Sales</CardTitle>
-						<CreditCard className="h-4 w-4 text-muted-foreground" />
+						<CardTitle className="text-sm font-medium text-muted-foreground">
+							Sales
+						</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center">
+							<CreditCard className="h-4 w-4 text-green-500" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">{stats.totalSales}</div>
-						<p className="text-xs text-muted-foreground">Paid tickets</p>
+						<div className="text-2xl font-bold tracking-tight">
+							{stats.totalSales}
+						</div>
+						<p className="text-xs text-muted-foreground mt-1">
+							Total paid tickets
+						</p>
 					</CardContent>
 				</Card>
-				<Card>
+				<Card className="hover:scale-[1.02] transition-transform duration-200">
 					<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-						<CardTitle className="text-sm font-medium">Active Now</CardTitle>
-						<Activity className="h-4 w-4 text-muted-foreground" />
+						<CardTitle className="text-sm font-medium text-muted-foreground">
+							Active Now
+						</CardTitle>
+						<div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+							<Activity className="h-4 w-4 text-orange-500" />
+						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="text-2xl font-bold">{stats.activeNow}</div>
-						<p className="text-xs text-muted-foreground">Occupied spots</p>
+						<div className="text-2xl font-bold tracking-tight">
+							{stats.activeNow}
+						</div>
+						<p className="text-xs text-muted-foreground mt-1">
+							Currently occupied spots
+						</p>
 					</CardContent>
 				</Card>
 			</div>

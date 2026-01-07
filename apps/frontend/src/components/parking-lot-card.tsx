@@ -10,6 +10,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { ParkingLot } from "@/types";
 
 interface ParkingLotCardProps {
@@ -28,7 +29,7 @@ export function ParkingLotCard({
 	const isFull = occupancyPercentage >= 90;
 
 	return (
-		<Card className="overflow-hidden">
+		<Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
 			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 				<CardTitle className="text-xl font-bold truncate">
 					{parkingLot.name}
@@ -37,6 +38,7 @@ export function ParkingLotCard({
 					<Button
 						variant="ghost"
 						size="icon"
+						className="h-8 w-8 text-muted-foreground hover:text-foreground"
 						onClick={() => onEdit?.(parkingLot)}
 					>
 						<Edit className="h-4 w-4" />
@@ -44,7 +46,7 @@ export function ParkingLotCard({
 					<Button
 						variant="ghost"
 						size="icon"
-						className="text-destructive"
+						className="h-8 w-8 text-muted-foreground hover:text-destructive"
 						onClick={() => onDelete?.(parkingLot.id)}
 					>
 						<Trash className="h-4 w-4" />
@@ -54,11 +56,11 @@ export function ParkingLotCard({
 			<CardContent>
 				<div className="grid gap-2 text-sm text-muted-foreground mb-4">
 					<div className="flex items-center">
-						<MapPin className="mr-2 h-4 w-4" />
+						<MapPin className="mr-2 h-4 w-4 text-primary" />
 						{parkingLot.location || "No location set"}
 					</div>
 					<div className="flex items-center">
-						<Car className="mr-2 h-4 w-4" />
+						<Car className="mr-2 h-4 w-4 text-primary" />
 						{parkingLot.totalSpots - parkingLot.occupiedSpots} spots available
 					</div>
 				</div>
@@ -72,9 +74,10 @@ export function ParkingLotCard({
 					</div>
 					<div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
 						<div
-							className={`h-full transition-all duration-300 ${
+							className={cn(
+								"h-full transition-all duration-300",
 								isFull ? "bg-destructive" : "bg-primary"
-							}`}
+							)}
 							style={{ width: `${occupancyPercentage}%` }}
 						/>
 					</div>
