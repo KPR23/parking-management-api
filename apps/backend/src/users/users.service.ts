@@ -25,4 +25,11 @@ export class UsersService {
       },
     });
   }
+  async findAll(): Promise<User[]> {
+    return this.prisma.user.findMany();
+  }
+
+  async delete(id: number): Promise<User> {
+    return this.prisma.user.delete({ where: { id } });
+  }
 }

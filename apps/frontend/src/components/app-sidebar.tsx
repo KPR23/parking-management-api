@@ -9,6 +9,7 @@ import {
 	Ticket,
 	LogOut,
 	ChevronsUpDown,
+	Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,6 +44,11 @@ const sidebarItems = [
 		title: "Subscriptions",
 		href: "/subscriptions",
 		icon: CreditCard,
+	},
+	{
+		title: "Admins",
+		href: "/admins",
+		icon: Users,
 	},
 ];
 
