@@ -35,11 +35,6 @@ const sidebarItems = [
 		href: "/subscriptions",
 		icon: CreditCard,
 	},
-	{
-		title: "Settings",
-		href: "/settings",
-		icon: Settings,
-	},
 ];
 
 export function AppSidebar() {

@@ -1,5 +1,14 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+class ApiError extends Error {
+	constructor(
+		public message: string,
+		public status: number
+	) {
+		super(message);
+	}
+}
+
 class ApiClient {
 	private baseUrl: string;
 
@@ -19,7 +28,7 @@ class ApiClient {
 			} catch (e) {
 				// Ignore JSON parse error, use default message
 			}
-			throw new Error(errorMessage);
+			throw new ApiError(errorMessage, response.status);
 		}
 		return response.json();
 	}
@@ -41,6 +50,20 @@ class ApiClient {
 	async put<T>(endpoint: string, data: any): Promise<T> {
 		const response = await fetch(`${this.baseUrl}${endpoint}`, {
 			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(data),
+		});
+		if (!response.ok) {
+			throw new Error(`API Error: ${response.statusText}`);
+		}
+		return response.json();
+	}
+
+	async patch<T>(endpoint: string, data: any): Promise<T> {
+		const response = await fetch(`${this.baseUrl}${endpoint}`, {
+			method: "PATCH",
 			headers: {
 				"Content-Type": "application/json",
 			},

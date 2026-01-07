@@ -2,90 +2,138 @@
 
 import { queryOptions } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarDays, CreditCard, ShieldCheck } from "lucide-react";
+import {
+	CalendarDays,
+	CreditCard,
+	Edit,
+	MoreVertical,
+	Trash,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useDeleteSubscription } from "@/hooks/use-subscriptions";
 import { cn } from "@/lib/utils";
 import type { Subscription } from "@/hooks/use-subscriptions";
 
 interface SubscriptionCardProps {
 	subscription: Subscription;
+	onEdit?: () => void;
 }
 
-export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
+export function SubscriptionCard({
+	subscription,
+	onEdit,
+}: SubscriptionCardProps) {
 	const isExpired = new Date(subscription.endDate) < new Date();
+	const deleteMutation = useDeleteSubscription();
 
-	// Determine card style based on type
-	const getTypeStyles = (type: string) => {
-		switch (type) {
-			case "lifetime":
-				return "bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white border-slate-700";
-			case "yearly":
-				return "bg-gradient-to-br from-violet-600 to-indigo-600 text-white border-indigo-500";
-			case "monthly":
-				return "bg-gradient-to-br from-white to-slate-50 border-slate-200 dark:from-slate-900 dark:to-slate-800 dark:border-slate-700";
-			default:
-				return "bg-card";
+	const handleDelete = () => {
+		if (confirm("Are you sure you want to cancel this subscription?")) {
+			deleteMutation.mutate(subscription.id);
 		}
 	};
 
-	const isActiveStyle = !isExpired && "ring-2 ring-primary ring-offset-2";
+	// Tier dots instead of full backgrounds
+	const getTierColor = (type: string) => {
+		switch (type) {
+			case "lifetime":
+				return "bg-slate-900 dark:bg-slate-100";
+			case "yearly":
+				return "bg-indigo-600";
+			case "monthly":
+				return "bg-slate-400";
+			default:
+				return "bg-slate-200";
+		}
+	};
 
 	return (
-		<Card
-			className={cn(
-				"relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-xl aspect-[1.586/1]", // Credit card ratio
-				getTypeStyles(subscription.type),
-				isActiveStyle
-			)}
-		>
-			{/* Decorative elements */}
-			<div className="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-			<div className="absolute bottom-0 left-0 p-24 bg-black/10 rounded-full blur-2xl -ml-12 -mb-12 pointer-events-none" />
-
-			<CardContent className="h-full flex flex-col justify-between p-6 relative z-10">
+		<Card className="group relative overflow-hidden transition-all duration-300 hover:shadow-md border bg-card">
+			<CardContent className="p-5 flex flex-col gap-4">
+				{/* Header */}
 				<div className="flex justify-between items-start">
-					<div className="flex items-center gap-2">
-						<ShieldCheck className="w-6 h-6 opacity-80" />
-						<span className="font-bold tracking-wider uppercase text-sm opacity-90">
-							Park<span className="text-primary-foreground/80">Manager</span>
-						</span>
-					</div>
-					<Badge
-						variant="outline"
-						className="bg-white/10 border-white/20 backdrop-blur-sm text-current uppercase tracking-widest text-[10px]"
-					>
-						{subscription.type}
-					</Badge>
-				</div>
-
-				<div className="flex flex-col gap-1">
-					<div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest opacity-70">
-						<CreditCard className="w-3 h-3" /> License Plate
-					</div>
-					<div className="font-mono text-2xl font-bold tracking-widest shadow-black/10 drop-shadow-sm">
-						{subscription.car?.plateNumber}
-					</div>
-				</div>
-
-				<div className="flex justify-between items-end">
-					<div className="flex flex-col gap-1">
-						<span className="text-[10px] uppercase tracking-widest opacity-70">
-							Valid Until
-						</span>
-						<span className="font-mono text-sm font-medium flex items-center gap-2">
-							<CalendarDays className="w-3 h-3" />
-							{format(new Date(subscription.endDate), "MM/yy")}
-						</span>
+					<div className="flex items-center gap-3">
+						<div
+							className={cn(
+								"w-2 h-2 rounded-full",
+								getTierColor(subscription.type)
+							)}
+						/>
+						<div className="flex flex-col">
+							<span className="font-mono text-lg font-bold tracking-tight leading-none">
+								{subscription.car?.plateNumber}
+							</span>
+							<span className="text-xs text-muted-foreground capitalize mt-1">
+								{subscription.type} Plan
+							</span>
+						</div>
 					</div>
 
-					{isExpired && (
-						<Badge variant="destructive" className="animate-pulse">
-							Expired
+					<div className="flex gap-2">
+						<Badge
+							variant="secondary"
+							className={cn(
+								"uppercase text-[10px] tracking-wider font-semibold",
+								isExpired
+									? "bg-destructive/10 text-destructive hover:bg-destructive/15"
+									: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 hover:bg-green-100"
+							)}
+						>
+							{isExpired ? "Expired" : "Active"}
 						</Badge>
-					)}
+
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" className="h-6 w-6 p-0">
+									<MoreVertical className="h-4 w-4 text-muted-foreground" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								<DropdownMenuItem onClick={onEdit}>
+									<Edit className="mr-2 h-4 w-4" /> Edit / Extend
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onClick={handleDelete}
+									className="text-destructive focus:text-destructive"
+								>
+									<Trash className="mr-2 h-4 w-4" /> Cancel Subscription
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</div>
 				</div>
+
+				<div className="h-px bg-border/50" />
+
+				{/* Dates */}
+				{subscription.type !== "lifetime" && (
+					<div className="flex items-center justify-between text-sm">
+						<div className="flex flex-col gap-1">
+							<span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+								Valid Until
+							</span>
+							<div className="flex items-center gap-1.5 font-medium">
+								<CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
+								{format(new Date(subscription.endDate), "MMM d, yyyy")}
+							</div>
+						</div>
+					</div>
+				)}
 			</CardContent>
+
+			{/* Active Indicator Bar */}
+			{!isExpired && (
+				<div className="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform origin-bottom" />
+			)}
 		</Card>
 	);
 }

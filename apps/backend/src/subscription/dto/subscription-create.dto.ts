@@ -28,9 +28,18 @@ export class CreateSubscriptionDto {
   @IsOptional()
   startDate?: string;
 
-  @ApiProperty({ description: 'ID of the car', example: 1 })
+  @ApiProperty({ description: 'ID of the car', example: 1, required: false })
   @IsInt()
   @Min(1)
+  @IsOptional()
+  carId?: number;
+
+  @ApiProperty({
+    description: 'License plate number of the car',
+    example: 'WA12345',
+    required: false,
+  })
+  @IsOptional()
   @IsNotEmpty()
-  carId: number;
+  plateNumber?: string;
 }

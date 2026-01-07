@@ -59,14 +59,30 @@ export class SubscriptionService {
 
   async create(data: CreateSubscriptionDto): Promise<Subscription> {
     return await this.prisma.$transaction(async (tx) => {
-      const car = await tx.car.findUnique({
-        where: { id: data.carId },
-        include: { subscription: true },
-      });
+      let car;
+
+      if (data.carId) {
+        car = await tx.car.findUnique({
+          where: { id: data.carId },
+          include: { subscription: true },
+        });
+      } else if (data.plateNumber) {
+        car = await tx.car.findFirst({
+          where: { plateNumber: data.plateNumber },
+          include: { subscription: true },
+        });
+
+        if (!car) {
+          car = await tx.car.create({
+            data: { plateNumber: data.plateNumber },
+            include: { subscription: true },
+          });
+        }
+      }
 
       if (!car) {
         throw new BadRequestException(
-          'Car not found. Cannot create subscription.',
+          'Car not found or could not be created. Provide carId or plateNumber.',
         );
       }
 
@@ -74,7 +90,7 @@ export class SubscriptionService {
 
       if (car.subscription && car.subscription.endDate > now) {
         throw new BadRequestException(
-          `Car with ID ${data.carId} already has an active subscription until ${car.subscription.endDate.toISOString()}.`,
+          `Car with ID ${car.id} already has an active subscription until ${car.subscription.endDate.toISOString()}.`,
         );
       }
 
@@ -106,7 +122,7 @@ export class SubscriptionService {
           type: data.type,
           startDate,
           endDate,
-          car: { connect: { id: data.carId } },
+          car: { connect: { id: car.id } },
         },
       });
     });
