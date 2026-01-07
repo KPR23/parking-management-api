@@ -26,6 +26,23 @@ export class TicketsService {
     return ticket;
   }
 
+  async findAll(params: { plateNumber?: string }): Promise<Ticket[]> {
+    return this.prisma.ticket.findMany({
+      where: {
+        car: params.plateNumber
+          ? { plateNumber: { contains: params.plateNumber } }
+          : undefined,
+      },
+      include: {
+        car: true,
+        parkingLot: true,
+      },
+      orderBy: {
+        entryTime: 'desc',
+      },
+    });
+  }
+
   async getActiveTicketByPlate(plateNumber: string): Promise<Ticket> {
     const ticket = await this.prisma.ticket.findFirst({
       where: {

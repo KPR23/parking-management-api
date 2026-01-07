@@ -10,7 +10,16 @@ class ApiClient {
 	async get<T>(endpoint: string): Promise<T> {
 		const response = await fetch(`${this.baseUrl}${endpoint}`);
 		if (!response.ok) {
-			throw new Error(`API Error: ${response.statusText}`);
+			let errorMessage = `API Error: ${response.statusText}`;
+			try {
+				const errorData = await response.json();
+				if (errorData.message) {
+					errorMessage = errorData.message;
+				}
+			} catch (e) {
+				// Ignore JSON parse error, use default message
+			}
+			throw new Error(errorMessage);
 		}
 		return response.json();
 	}

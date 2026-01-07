@@ -1,4 +1,15 @@
 {
 	"prisma.pinToPrisma6": true,
-	"css.lint.unknownAtRules": "ignore"
+	"css.lint.unknownAtRules": "ignore",
+	"editor.defaultFormatter": "dbaeumer.vscode-eslint",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"biome.enabled": false,
+	"[typescript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	}
 }

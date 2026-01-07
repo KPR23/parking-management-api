@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,10 +11,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Subscription } from '@prisma/client';
-import { CreateSubscriptionDto } from './dto/subscription-create.dto';
-import { RenewSubscriptionDto } from './dto/subscription-renew.dto';
-import { UpdateSubscriptionDto } from './dto/subscription-update.dto';
+import type { Subscription } from '@prisma/client';
+import type { CreateSubscriptionDto } from './dto/subscription-create.dto';
+import type { RenewSubscriptionDto } from './dto/subscription-renew.dto';
+import type { UpdateSubscriptionDto } from './dto/subscription-update.dto';
 import { SubscriptionService } from './subscription.service';
 
 @ApiTags('Subscriptions')
@@ -31,7 +30,7 @@ export class SubscriptionController {
   async getSubscription(
     @Query('id') id?: number,
     @Query('plateNumber') plateNumber?: string,
-  ): Promise<Subscription> {
+  ): Promise<Subscription | Subscription[]> {
     if (id) {
       return this.subscriptionService.getSubscriptionById(Number(id));
     }
@@ -40,9 +39,7 @@ export class SubscriptionController {
       return this.subscriptionService.getSubscriptionByPlateNumber(plateNumber);
     }
 
-    throw new BadRequestException(
-      'Please provide either "id" or "plateNumber" as a query parameter.',
-    );
+    return this.subscriptionService.findAll();
   }
 
   @Post()

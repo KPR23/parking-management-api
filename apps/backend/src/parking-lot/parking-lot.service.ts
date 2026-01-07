@@ -1,13 +1,13 @@
+import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { GateType, ParkingLot } from '@prisma/client';
-import { randomUUID } from 'node:crypto';
+import { GateType, type ParkingLot } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateParkingLotDto } from './dto/parking-lot-create.dto';
-import { UpdateParkingLotDto } from './dto/parking-lot-update.dto';
+import type { CreateParkingLotDto } from './dto/parking-lot-create.dto';
+import type { UpdateParkingLotDto } from './dto/parking-lot-update.dto';
 
 @Injectable()
 export class ParkingLotService {
@@ -91,6 +91,7 @@ export class ParkingLotService {
   async delete(id: number): Promise<ParkingLot> {
     return await this.prisma.$transaction(async (tx) => {
       await tx.ticket.deleteMany({ where: { parkingLotId: id } });
+      await tx.gate.deleteMany({ where: { parkingLotId: id } });
 
       return tx.parkingLot.delete({
         where: { id },

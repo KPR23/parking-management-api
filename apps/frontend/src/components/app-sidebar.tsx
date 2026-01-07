@@ -1,0 +1,122 @@
+"use client";
+
+import {
+	CreditCard,
+	LayoutDashboard,
+	Menu,
+	Settings,
+	SquareParking,
+	Ticket,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const sidebarItems = [
+	{
+		title: "Dashboard",
+		href: "/",
+		icon: LayoutDashboard,
+	},
+	{
+		title: "Parking Lots",
+		href: "/parking-lots",
+		icon: SquareParking,
+	},
+	{
+		title: "Tickets",
+		href: "/tickets",
+		icon: Ticket,
+	},
+	{
+		title: "Subscriptions",
+		href: "/subscriptions",
+		icon: CreditCard,
+	},
+	{
+		title: "Settings",
+		href: "/settings",
+		icon: Settings,
+	},
+];
+
+export function AppSidebar() {
+	const pathname = usePathname();
+	const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+	return (
+		<>
+			{/* Mobile Menu Button */}
+			<Button
+				variant="ghost"
+				size="icon"
+				className="md:hidden fixed top-4 right-4 z-50"
+				onClick={() => setIsMobileOpen(!isMobileOpen)}
+			>
+				<Menu className="h-6 w-6" />
+			</Button>
+
+			{/* Sidebar Container */}
+			<aside
+				className={cn(
+					"fixed inset-y-0 left-0 z-40 w-64 transform bg-background border-r transition-transform duration-200 ease-in-out md:translate-x-0",
+					isMobileOpen ? "translate-x-0" : "-translate-x-full"
+				)}
+			>
+				<div className="flex h-16 items-center px-6 border-b">
+					<Link href="/" className="flex items-center gap-2 font-bold text-xl">
+						<SquareParking className="h-6 w-6 text-primary" />
+						<span>ParkManager</span>
+					</Link>
+				</div>
+
+				<nav className="flex-1 space-y-1 px-3 py-4">
+					{sidebarItems.map((item) => {
+						const Icon = item.icon;
+						const isActive = pathname === item.href;
+
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								onClick={() => setIsMobileOpen(false)}
+								className={cn(
+									"group flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-colors",
+									isActive
+										? "bg-primary/10 text-primary"
+										: "text-muted-foreground hover:bg-muted hover:text-foreground"
+								)}
+							>
+								<Icon
+									className={cn(
+										"mr-3 h-5 w-5 flex-shrink-0",
+										isActive
+											? "text-primary"
+											: "text-muted-foreground group-hover:text-foreground"
+									)}
+								/>
+								{item.title}
+							</Link>
+						);
+					})}
+				</nav>
+
+				<div className="p-4 border-t">
+					<div className="flex items-center gap-3">
+						<div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+							<span className="text-sm font-bold text-primary">A</span>
+						</div>
+						<div className="flex flex-col">
+							<span className="text-sm font-medium">Admin User</span>
+							<span className="text-xs text-muted-foreground">
+								admin@example.com
+							</span>
+						</div>
+					</div>
+				</div>
+			</aside>
+		</>
+	);
+}

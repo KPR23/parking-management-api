@@ -60,4 +60,7 @@ export interface Ticket {
 	usedDailyFree: boolean;
 	carId: number;
 	parkingLotId: number;
+	car?: {
+		plateNumber: string;
+	};
 }

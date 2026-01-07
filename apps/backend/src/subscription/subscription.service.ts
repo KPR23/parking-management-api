@@ -3,11 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Subscription } from '@prisma/client';
+import type { Subscription } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateSubscriptionDto } from './dto/subscription-create.dto';
-import { RenewSubscriptionDto } from './dto/subscription-renew.dto';
-import { UpdateSubscriptionDto } from './dto/subscription-update.dto';
+import type { CreateSubscriptionDto } from './dto/subscription-create.dto';
+import type { RenewSubscriptionDto } from './dto/subscription-renew.dto';
+import type { UpdateSubscriptionDto } from './dto/subscription-update.dto';
 
 @Injectable()
 export class SubscriptionService {
@@ -16,6 +16,7 @@ export class SubscriptionService {
   async getSubscriptionById(id: number): Promise<Subscription> {
     const subscription = await this.prisma.subscription.findUnique({
       where: { id },
+      include: { car: true },
     });
 
     if (!subscription) {
@@ -23,6 +24,17 @@ export class SubscriptionService {
     }
 
     return subscription;
+  }
+
+  async findAll(): Promise<Subscription[]> {
+    return this.prisma.subscription.findMany({
+      include: {
+        car: true,
+      },
+      orderBy: {
+        startDate: 'desc',
+      },
+    });
   }
 
   async getSubscriptionByPlateNumber(
@@ -33,6 +45,7 @@ export class SubscriptionService {
         car: { plateNumber },
         endDate: { gt: new Date() },
       },
+      include: { car: true },
     });
 
     if (!subscription) {
