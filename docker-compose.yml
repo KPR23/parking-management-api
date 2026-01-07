@@ -5,10 +5,10 @@ services:
       dockerfile: apps/backend/Dockerfile
     container_name: parking-api-backend
     ports:
-      - '8000:3000'
+      - '8000:8000'
     environment:
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=8000
       - DATABASE_URL=${DATABASE_URL}
     depends_on:
       - db
