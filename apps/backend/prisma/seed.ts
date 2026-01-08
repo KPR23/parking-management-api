@@ -74,6 +74,38 @@ async function main() {
       },
     },
   });
+
+  const carWithEntry = await prisma.car.upsert({
+    where: { plateNumber: 'WA12345' },
+    update: {},
+    create: {
+      plateNumber: 'WA12345',
+      tickets: {
+        create: {
+          parkingLotId: parkingLot.id,
+          entryTime: new Date(new Date().getTime() - 60 * 60 * 1000),
+        },
+      },
+    },
+  });
+
+  const carWithExit = await prisma.car.upsert({
+    where: { plateNumber: 'WA123456' },
+    update: {},
+    create: {
+      plateNumber: 'WA123456',
+      tickets: {
+        create: {
+          parkingLotId: parkingLot.id,
+          entryTime: new Date(new Date().getTime() - 3 * 60 * 60 * 1000), 
+          exitTime: new Date(new Date().getTime() - 60 * 60 * 1000), 
+          totalAmount: 15.0,
+          isPaid: true,
+          paidAt: new Date(new Date().getTime() - 60 * 60 * 1000),
+        },
+      },
+    },
+  });
 }
 
 main()
