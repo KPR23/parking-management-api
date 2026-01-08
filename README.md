@@ -7,4 +7,5 @@
 1. Sklonuj repozytorium: git clone git@github.com:KPR23/parking-management-api.git
 2. cd parking-management-api
 3. git checkout frontend
-4. docker compose up
+4. cp .env.example .env
+5. docker compose up
