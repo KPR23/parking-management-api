@@ -10,9 +10,20 @@
 4. cp .env.example .env
 5. docker compose up
 
+
+## Linki do interfejsów
+
+Prisma Studio: http://localhost:5555 (podgląd bazy danych oraz manipulacja danymi)
+
+Admin Panel: http://localhost:3000 (panel do zarządzania parkingami)  
+
+Swagger: http://localhost:8000/api (interfejs do testowania API)
+
 ## Przykładowe dane
 
-Logowanie: admin@parking.com/admin123
+Logowanie: admin@parking.com | Hasło: admin123
+
 Auto z subskrypcją: KR54321
-Auto z aktywnym biletem: WA12345
-Auto z zakończonym biletem: WA123456
+
+Auto z aktywnym biletem: WA123456
+
