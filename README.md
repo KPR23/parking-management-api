@@ -12,6 +12,7 @@
 
 ## Przykładowe dane
 
+Logowanie: admin@parking.com/admin123
 Auto z subskrypcją: KR54321
 Auto z aktywnym biletem: WA12345
 Auto z zakończonym biletem: WA123456
