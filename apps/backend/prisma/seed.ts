@@ -1,11 +1,23 @@
 import { PrismaClient } from '@prisma/client';
 
+import * as bcrypt from 'bcrypt';
+
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding database...');
 
-  // 1. Create Parking Lot
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@parking.com' },
+    update: {},
+    create: {
+      email: 'admin@parking.com',
+      password: hashedPassword,
+      name: 'Admin',
+    },
+  });
+
   const parkingLot = await prisma.parkingLot.upsert({
     where: { name: 'Central Parking' },
     update: {},
@@ -17,9 +29,7 @@ async function main() {
       freeHoursPerDay: 2,
     },
   });
-  console.log({ parkingLot });
 
-  // 2. Create Gates
   const entryGate = await prisma.gate.upsert({
     where: { id: 1 },
     update: {},
@@ -30,7 +40,6 @@ async function main() {
       parkingLotId: parkingLot.id,
     },
   });
-  console.log({ entryGate });
 
   const exitGate = await prisma.gate.upsert({
     where: { id: 2 },
@@ -42,9 +51,7 @@ async function main() {
       parkingLotId: parkingLot.id,
     },
   });
-  console.log({ exitGate });
 
-  // 3. Create Cars
   const car1 = await prisma.car.upsert({
     where: { plateNumber: 'WA12345' },
     update: {},
@@ -52,9 +59,7 @@ async function main() {
       plateNumber: 'WA12345',
     },
   });
-  console.log({ car1 });
 
-  // 4. Create Subscriber Car
   const subscriberCar = await prisma.car.upsert({
     where: { plateNumber: 'KR54321' },
     update: {},
@@ -69,9 +74,6 @@ async function main() {
       },
     },
   });
-  console.log({ subscriberCar });
-
-  console.log('Seeding finished.');
 }
 
 main()

@@ -9,3 +9,9 @@
 3. git checkout frontend
 4. cp .env.example .env
 5. docker compose up
+
+## Przykładowe dane
+
+Auto z subskrypcją: KR54321
+Auto z aktywnym biletem: WA12345
+Auto z zakończonym biletem: WA123456
