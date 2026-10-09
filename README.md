@@ -1,108 +1,68 @@
-# Parking Management API
+# Parking Management
 
-A robust NestJS-based backend application for managing parking lots, including features for cameras, gates, payments, and subscriptions.
+Mobile system for finding, reserving, and paying for parking spots in a city. University project with a mobile app, a REST web service, and a PostgreSQL database.
 
-## 🚀 Features
+## Structure
 
-- **Parking Lot Management**: Manage parking spots, pricing, and locations.
-- **Gate Control**: Simulate entry and exit gates with device integration.
-- **Camera Events**: Handle license plate recognition events (ALPR).
-- **Ticket System**: Issue and track parking tickets.
-- **Payments**: Process payments for parking sessions.
-- **Subscriptions**: Manage monthly, yearly, and lifetime parking subscriptions.
-- **Cars**: Register and manage vehicles.
+Turborepo monorepo managed with pnpm.
 
-## 🛠️ Tech Stack
+| Path          | Description                                     |
+| ------------- | ----------------------------------------------- |
+| `apps/api`    | REST API: NestJS 12, Prisma 7, PostgreSQL       |
+| `apps/mobile` | Mobile app: Expo SDK 57 (React Native, Android) |
 
-- **Framework**: [NestJS](https://nestjs.com/)
-- **Database**: PostgreSQL
-- **ORM**: [Prisma](https://www.prisma.io/)
-- **Documentation**: Swagger (OpenAPI)
-- **Containerization**: Docker & Docker Compose
-- **Package Manager**: pnpm
+## Tech stack
 
-## 📦 Setup
+- **Language**: TypeScript 7
+- **API**: [NestJS](https://nestjs.com/), [Prisma](https://www.prisma.io/), PostgreSQL
+- **Mobile**: [Expo](https://expo.dev/) with Expo Router
+- **Tooling**: [Turborepo](https://turborepo.com/), [Biome](https://biomejs.dev/) (lint + format), pnpm
+
+## Setup
 
 ### Prerequisites
 
-- Node.js (v20+)
-- Docker & Docker Compose
-- pnpm (`npm install -g pnpm`)
+- Node.js 24+
+- pnpm 12+
+- A running PostgreSQL instance
 
 ### Installation
 
-1.  Clone the repository:
-
-    ```bash
-    git clone https://github.com/KPR23/parking-management-api
-    cd parking-management-api
-    ```
-
-2.  Install dependencies:
-
-    ```bash
-    make install
-    # or
-    pnpm install
-    ```
-
-3.  Set up environment variables:
-    Copy `.env.example` to `.env` (if available) or ensure the following variables are set:
-    ```env
-    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/nest_db?schema=public"
-    ```
-
-### Running the Application
-
-#### Using Docker (Recommended)
-
-Start the database and application using Docker Compose:
-
 ```bash
-make up
-# or
-docker-compose up -d
+git clone https://github.com/KPR23/parking-management-api
+cd parking-management-api
+pnpm install
 ```
 
-#### Local Development
+Create `apps/api/.env` from the example and set your database connection:
 
-1.  Start the database (if not using Docker for the app):
+```bash
+cp apps/api/.env.example apps/api/.env
+```
 
-    ```bash
-    docker-compose up -d db
-    ```
+Apply migrations and seed the database:
 
-2.  Run database migrations:
+```bash
+pnpm --filter @parking/api db:migrate
+pnpm --filter @parking/api db:seed
+```
 
-    ```bash
-    pnpm prisma migrate dev
-    ```
+### Running
 
-3.  Start the application:
-    ```bash
-    pnpm run start:dev
-    ```
+```bash
+pnpm dev                          # API + Expo dev server
+pnpm --filter @parking/api dev    # API only (http://localhost:3000)
+pnpm --filter @parking/mobile dev # Expo only
+```
 
-## 📚 API Documentation
+## Commands
 
-Once the application is running, you can access the Swagger API documentation at:
+| Command          | Description                          |
+| ---------------- | ------------------------------------ |
+| `pnpm dev`       | Run all apps in development mode     |
+| `pnpm build`     | Build all apps                       |
+| `pnpm typecheck` | Typecheck all apps                   |
+| `pnpm check`     | Lint and format check (Biome)        |
+| `pnpm check:fix` | Apply Biome lint and formatting fixes |
 
-[http://localhost:8000/api](http://localhost:8000/api)
-
-## 🛠️ Commands (Makefile)
-
-This project includes a `Makefile` for common tasks:
-
-| Command          | Description                     |
-| ---------------- | ------------------------------- |
-| `make install`   | Install dependencies            |
-| `make up`        | Start services (Docker)         |
-| `make down`      | Stop services                   |
-| `make logs`      | View application logs           |
-| `make db-studio` | Open Prisma Studio to view data |
-| `make lint`      | Run linter                      |
-| `make build`     | Build the project               |
-
-## 🧪 Testing
-
-# _Note: Tests are currently being implemented._
+API database commands (`pnpm --filter @parking/api <command>`): `db:generate`, `db:migrate`, `db:seed`, `db:studio`.
