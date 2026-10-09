@@ -26,10 +26,13 @@ export class CreateParkingLotDto {
   @IsNotEmpty()
   readonly totalSpots: number;
 
+  @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   readonly pricePerHour?: number;
 
+  @IsOptional()
+  @IsInt()
   @Min(0)
   @Max(24)
   readonly freeHoursPerDay?: number;
