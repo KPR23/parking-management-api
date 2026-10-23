@@ -9,7 +9,7 @@ Turborepo monorepo managed with pnpm.
 | Path          | Description                                     |
 | ------------- | ----------------------------------------------- |
 | `apps/api`    | REST API: NestJS 12, Prisma 7, PostgreSQL       |
-| `apps/mobile` | Mobile app: Expo SDK 57 (React Native, Android) |
+| `apps/mobile` | Mobile app: Expo SDK 58 (React Native, Android) |
 
 ## Tech stack
 
